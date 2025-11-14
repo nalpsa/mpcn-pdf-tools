@@ -1,5 +1,7 @@
 @page "/compress-pdf"
 @page "/comprimir"
+@inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>Comprimir PDF - PDF Processor</PageTitle>
 
@@ -84,11 +86,18 @@
     </div>
 
     <div class="action-section">
-      <button class="btn btn-primary" disabled="@(selectedFiles.Count == 0)" @onclick="ProcessFiles">
-        🗜️ Comprimir PDFs
+      <button class="btn btn-primary" disabled="@(selectedFiles.Count == 0 || isProcessing)" @onclick="ProcessFiles">
+        @if (isProcessing)
+        {
+          <span>⏳ Comprimindo...</span>
+        }
+        else
+        {
+          <span>🗜️ Comprimir PDFs</span>
+        }
       </button>
 
-      <button class="btn btn-secondary" @onclick="ClearFiles">
+      <button class="btn btn-secondary" disabled="@isProcessing" @onclick="ClearFiles">
         🗑️ Limpar
       </button>
     </div>
@@ -97,7 +106,7 @@
     {
       <div class="loading">
         <div class="spinner"></div>
-        <p>Comprimindo arquivos...</p>
+        <p>Comprimindo @selectedFiles.Count arquivo(s)...</p>
       </div>
     }
 
@@ -129,6 +138,116 @@
 </div>
 
 <style>
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .header-icon {
+    font-size: 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+  }
+
+  .subtitle {
+    color: #718096;
+    margin: 0;
+  }
+
+  .content-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .info-box {
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .info-box.info {
+    background: #ebf8ff;
+    border-left: 4px solid #3182ce;
+  }
+
+  .info-icon {
+    font-size: 1.5rem;
+  }
+
+  .upload-section h3 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+
+  .file-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .file-input:hover {
+    border-color: #667eea;
+    background: #f7fafc;
+  }
+
+  .files-list {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 8px;
+  }
+
+  .files-list h4 {
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+
+  .file-icon {
+    font-size: 1.5rem;
+  }
+
+  .file-name {
+    flex: 1;
+    color: #2d3748;
+    font-weight: 500;
+  }
+
+  .file-size {
+    color: #718096;
+    font-size: 0.875rem;
+  }
+
   .compression-options {
     margin-top: 2rem;
     padding: 1.5rem;
@@ -209,6 +328,125 @@
     color: #2d3748;
     font-weight: 500;
   }
+
+  .action-section {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: #e2e8f0;
+    color: #2d3748;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #cbd5e0;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  /* ✅ CORRIGIDO: Usar @@ para escapar @ no CSS */
+  @@keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+
+  .alert-success {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left: 4px solid #38a169;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #742a2a;
+    border-left: 4px solid #e53e3e;
+  }
+
+  .alert-info {
+    background: #bee3f8;
+    color: #2c5282;
+    border-left: 4px solid #3182ce;
+  }
+
+  .feature-boxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .feature-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .feature-box h4 {
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .feature-box p {
+    color: #718096;
+    margin: 0;
+  }
 </style>
 
 @code {
@@ -219,6 +457,7 @@
   private string compressionLevel = "medium";
   private bool removeImages = false;
   private const long MaxFileSize = 16 * 1024 * 1024; // 16MB
+  private string apiBaseUrl = "http://10.0.0.50:5239"; // ✅ AJUSTE SEU IP AQUI
 
   private void HandleFileSelection(InputFileChangeEventArgs e)
   {
@@ -256,16 +495,49 @@
     if (selectedFiles.Count == 0) return;
 
     isProcessing = true;
-    statusMessage = $"Comprimindo arquivos com nível {compressionLevel}...";
+    statusMessage = $"Comprimindo {selectedFiles.Count} arquivo(s) com nível {compressionLevel}...";
     alertClass = "alert-info";
 
     try
     {
-      // TODO: Implementar chamada para a API
-      await Task.Delay(2000); // Simulação
+      var content = new MultipartFormDataContent();
 
-      statusMessage = $"✅ {selectedFiles.Count} arquivo(s) comprimido(s) com sucesso!";
-      alertClass = "alert-success";
+      // Adicionar arquivos
+      foreach (var file in selectedFiles)
+      {
+        var fileContent = new StreamContent(file.OpenReadStream(MaxFileSize));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+        content.Add(fileContent, "files", file.Name);
+
+        // Adicionar configurações
+        content.Add(new StringContent(compressionLevel), "compressionLevels");
+        content.Add(new StringContent(removeImages.ToString().ToLower()), "removeImages");
+      }
+
+      // Fazer requisição
+      var response = await Http.PostAsync($"{apiBaseUrl}/api/compresspdf/batch", content);
+
+      if (response.IsSuccessStatusCode)
+      {
+        // Baixar arquivo
+        var fileBytes = await response.Content.ReadAsByteArrayAsync();
+        var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+        ?? (selectedFiles.Count == 1
+        ? $"{Path.GetFileNameWithoutExtension(selectedFiles[0].Name)}_comprimido.pdf"
+        : $"pdfs_comprimidos_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
+
+        // Download via JavaScript
+        await JS.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(fileBytes));
+
+        statusMessage = $"✅ {selectedFiles.Count} arquivo(s) comprimido(s) com sucesso!";
+        alertClass = "alert-success";
+      }
+      else
+      {
+        var errorText = await response.Content.ReadAsStringAsync();
+        statusMessage = $"❌ Erro ao comprimir: {errorText}";
+        alertClass = "alert-error";
+      }
     }
     catch (Exception ex)
     {
@@ -301,3 +573,27 @@
     return $"{len:0.##} {sizes[order]}";
   }
 }
+
+<script>
+  window.downloadFile = function (filename, base64Data) {
+    const blob = base64ToBlob(base64Data, 'application/octet-stream');
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  function base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+  }
+</script>

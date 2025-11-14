@@ -335,7 +335,9 @@
   let nextFileId = 1;
 
   // URL DA API
-  const API_BASE_URL = 'http://localhost:5239';
+  const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:5239'
+    : 'http://10.0.0.50:5239';
 
   // Inicializar quando a página carregar
   window.addEventListener('load', function () {
