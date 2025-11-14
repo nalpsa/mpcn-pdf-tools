@@ -1,0 +1,110 @@
+﻿@page "/"
+@page "/dashboard"
+
+<PageTitle>PDF Processor - Dashboard</PageTitle>
+
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>📄 PDF Processor</h1>
+    <p class="subtitle">Sistema de Extração e Manipulação de PDFs Bancários</p>
+  </div>
+
+  <div class="cards-grid">
+    <!-- Seção: Ferramentas PDF -->
+    <div class="section-header">
+      <h2>🛠️ Ferramentas PDF</h2>
+    </div>
+
+    <div class="card tool-card" @onclick="@(() => NavigateTo("/rotate-pdf"))">
+      <div class="card-icon">🔄</div>
+      <div class="card-content">
+        <h3>Rotacionar PDF</h3>
+        <p>Rotacione páginas de PDFs com preview em tempo real</p>
+        <span class="card-badge">Múltiplos arquivos</span>
+      </div>
+    </div>
+
+    <div class="card tool-card" @onclick="@(() => NavigateTo("/merge-pdf"))">
+      <div class="card-icon">🔗</div>
+      <div class="card-content">
+        <h3>Mesclar PDF</h3>
+        <p>Combine múltiplos PDFs em um único arquivo</p>
+        <span class="card-badge">Seleção de páginas</span>
+      </div>
+    </div>
+
+    <div class="card tool-card" @onclick="@(() => NavigateTo("/compress-pdf"))">
+      <div class="card-icon">🗜️</div>
+      <div class="card-content">
+        <h3>Comprimir PDF</h3>
+        <p>Reduza o tamanho de arquivos PDF mantendo a qualidade</p>
+        <span class="card-badge">3 níveis</span>
+      </div>
+    </div>
+
+    <!-- Seção: Bancos -->
+    <div class="section-header">
+      <h2>🏦 Extração Bancária</h2>
+    </div>
+
+    <div class="card bank-card" @onclick="@(() => NavigateTo("/itau-cash"))">
+      <div class="card-icon">🟧</div>
+      <div class="card-content">
+        <h3>Itaú - Cash Transactions</h3>
+        <p>Extração de transações em múltiplas moedas (USD, EUR, BRL)</p>
+        <span class="card-badge">Múltiplas contas</span>
+      </div>
+    </div>
+
+    <div class="card bank-card" @onclick="@(() => NavigateTo("/itau-movimentacao"))">
+      <div class="card-icon">💳</div>
+      <div class="card-content">
+        <h3>Itaú - Movimentação</h3>
+        <p>Extração completa de movimentação bancária</p>
+        <span class="card-badge">Correção automática</span>
+      </div>
+    </div>
+
+    <!-- Coming Soon -->
+    <div class="card coming-soon-card">
+      <div class="card-icon">🔜</div>
+      <div class="card-content">
+        <h3>Outros Bancos</h3>
+        <p>Morgan Stanley, Julius Baer, Raymond James...</p>
+        <span class="card-badge disabled">Em breve</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informações do Sistema -->
+  <div class="system-info">
+    <div class="info-card">
+      <span class="info-icon">ℹ️</span>
+      <div>
+        <strong>Tamanho máximo:</strong> 16MB por arquivo
+      </div>
+    </div>
+    <div class="info-card">
+      <span class="info-icon">📊</span>
+      <div>
+        <strong>Formatos suportados:</strong> PDF
+      </div>
+    </div>
+    <div class="info-card">
+      <span class="info-icon">💾</span>
+      <div>
+        <strong>Saída:</strong> Excel (.xlsx), PDF, ZIP
+      </div>
+    </div>
+  </div>
+</div>
+
+@code {
+  [Inject]
+  public NavigationManager Navigation { get; set; } = default!;
+
+  private void NavigateTo(string url)
+  {
+    Navigation.NavigateTo(url);
+  }
+}

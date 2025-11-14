@@ -1,0 +1,582 @@
+@page "/rotate-pdf"
+@page "/rotacionar"
+@inject IJSRuntime JS
+@inject HttpClient Http
+
+<PageTitle>Rotacionar PDF - PDF Processor</PageTitle>
+
+<div class="page-container">
+  <div class="page-header">
+    <h1>🔄 Rotacionar PDF</h1>
+    <p>Rotacione páginas de PDFs com preview em tempo real</p>
+  </div>
+
+  <div class="content-card">
+    <!-- Upload Section -->
+    <div class="upload-section">
+      <h3>📁 Selecionar Arquivos</h3>
+
+      <div class="upload-button-container">
+        <label for="fileInput" class="btn-upload-label">
+          📄 Selecionar PDFs
+        </label>
+        <p class="upload-hint">Múltiplos arquivos PDF (máx. 16MB cada)</p>
+      </div>
+
+      <!-- Input File (escondido mas funcional) -->
+      <input type="file" id="fileInput" multiple accept=".pdf" style="display: none;" />
+    </div>
+
+    <!-- Preview Section -->
+    <div id="previewSection" class="preview-section" style="display: none;">
+      <!-- Action Buttons (centralizados) -->
+      <div class="action-buttons-container">
+        <button id="selectAllBtn" onclick="toggleSelectAll()" class="btn btn-primary">
+          <span id="selectAllText">✓ Selecionar Todos</span>
+        </button>
+        <button onclick="rotateSelected(-90)" class="btn btn-secondary">
+          ↶ Esquerda (90°)
+        </button>
+        <button onclick="rotateSelected(90)" class="btn btn-secondary">
+          ↷ Direita (90°)
+        </button>
+        <button onclick="processDownload()" class="btn btn-success">
+          ⬇ Download ZIP
+        </button>
+        <button onclick="clearAll()" class="btn btn-danger">
+          🗑️ Limpar
+        </button>
+      </div>
+
+      <!-- File Counter (centralizado abaixo dos botões) -->
+      <div class="file-counter">
+        📋 Arquivos Carregados: <strong id="fileCount">0</strong>
+      </div>
+
+      <!-- PDF Grid -->
+      <div id="pdfGrid" class="pdf-grid"></div>
+    </div>
+
+    <!-- Message Area -->
+    <div id="messageArea" class="message-area"></div>
+  </div>
+</div>
+
+<style>
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+
+  .content-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+
+  .upload-section {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .upload-button-container {
+    margin: 2rem 0;
+  }
+
+  .btn-upload-label {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-upload-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  }
+
+  .upload-hint {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ✅ NOVO: Botões centralizados */
+  .action-buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  /* ✅ NOVO: Contador centralizado */
+  .file-counter {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #333;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #545b62;
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    background: #28a745;
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #218838;
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+  }
+
+  .pdf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .pdf-card {
+    background: white;
+    border: 3px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 280px;
+    /* ✅ AJUSTE: Altura mínima para acomodar checkbox */
+  }
+
+  .pdf-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .pdf-card.selected {
+    border-color: #764ba2;
+    background: #f8f5ff;
+    box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
+  }
+
+  /* ✅ AJUSTE: Checkbox mais visível e acima da miniatura */
+  .pdf-checkbox {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 10;
+    background: white;
+    border-radius: 4px;
+    padding: 2px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .pdf-checkbox input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #764ba2;
+    /* Cor roxa quando marcado */
+  }
+
+  .pdf-thumbnail {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    position: relative;
+    margin-top: 0.5rem;
+    /* ✅ AJUSTE: Espaço para o checkbox */
+  }
+
+  .pdf-thumbnail img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .pdf-icon {
+    font-size: 4rem;
+    transition: transform 0.5s ease;
+  }
+
+  .pdf-info {
+    text-align: center;
+  }
+
+  .pdf-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pdf-size {
+    color: #666;
+    font-size: 0.85rem;
+  }
+
+  .rotation-badge {
+    display: inline-block;
+    background: #764ba2;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+  }
+
+  .message-area {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    display: none;
+  }
+
+  .message-area.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+  }
+
+  .message-area.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+  }
+
+  .message-area.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+    display: block;
+  }
+</style>
+
+<script>
+  let pdfFiles = [];
+  let selectedFiles = new Set();
+  let nextFileId = 1;
+
+  // URL DA API
+  const API_BASE_URL = 'http://localhost:5239';
+
+  // Inicializar quando a página carregar
+  window.addEventListener('load', function () {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+      fileInput.addEventListener('change', handleFileSelection);
+    }
+  });
+
+  async function handleFileSelection() {
+    const fileInput = document.getElementById('fileInput');
+    const files = fileInput.files;
+
+    if (!files || files.length === 0) return;
+
+    showMessage('📤 Carregando arquivos...', 'info');
+
+    // Processar cada arquivo
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Validar tamanho
+      if (file.size > 16 * 1024 * 1024) {
+        showMessage(`❌ ${file.name} é muito grande (máx. 16MB)`, 'error');
+        continue;
+      }
+
+      // Validar tipo
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        showMessage(`❌ ${file.name} não é um PDF`, 'error');
+        continue;
+      }
+
+      // Gerar miniatura via API
+      const thumbnail = await generateThumbnail(file);
+
+      // Adicionar à lista
+      pdfFiles.push({
+        id: nextFileId++,
+        file: file,
+        name: file.name,
+        size: file.size,
+        rotation: 0,
+        thumbnail: thumbnail
+      });
+    }
+
+    // Limpar input
+    fileInput.value = '';
+
+    // Atualizar UI
+    renderPdfGrid();
+    updateUI();
+    showMessage(`✅ ${files.length} arquivo(s) carregado(s) com sucesso!`, 'success');
+  }
+
+  async function generateThumbnail(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_BASE_URL}/api/rotatepdf/thumbnail`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar miniatura');
+      }
+
+      const data = await response.json();
+      return data.thumbnail;
+    } catch (error) {
+      console.error('Erro ao gerar thumbnail:', error);
+      return null;
+    }
+  }
+
+  function renderPdfGrid() {
+    const grid = document.getElementById('pdfGrid');
+    grid.innerHTML = '';
+
+    pdfFiles.forEach(pdf => {
+      const isSelected = selectedFiles.has(pdf.id);
+      const card = document.createElement('div');
+      card.className = `pdf-card ${isSelected ? 'selected' : ''}`;
+      card.onclick = () => toggleSelection(pdf.id);
+
+      const thumbnailHtml = pdf.thumbnail
+        ? `<img src="${pdf.thumbnail}" style="transform: rotate(${pdf.rotation}deg);" alt="${pdf.name}" />`
+        : `<div class="pdf-icon" style="transform: rotate(${pdf.rotation}deg);">📄</div>`;
+
+      card.innerHTML = `
+        <div class="pdf-checkbox">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} readonly />
+        </div>
+        <div class="pdf-thumbnail">
+          ${thumbnailHtml}
+        </div>
+        <div class="pdf-info">
+          <div class="pdf-name" title="${pdf.name}">${pdf.name}</div>
+          <div class="pdf-size">${formatFileSize(pdf.size)}</div>
+          ${pdf.rotation !== 0 ? `<span class="rotation-badge">${pdf.rotation}°</span>` : ''}
+        </div>
+      `;
+
+      grid.appendChild(card);
+    });
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function toggleSelection(fileId) {
+    if (selectedFiles.has(fileId)) {
+      selectedFiles.delete(fileId);
+    } else {
+      selectedFiles.add(fileId);
+    }
+    renderPdfGrid();
+    updateSelectAllButton();
+  }
+
+  function toggleSelectAll() {
+    if (selectedFiles.size === pdfFiles.length) {
+      selectedFiles.clear();
+    } else {
+      pdfFiles.forEach(pdf => selectedFiles.add(pdf.id));
+    }
+    renderPdfGrid();
+    updateSelectAllButton();
+  }
+
+  function updateSelectAllButton() {
+    const text = selectedFiles.size === pdfFiles.length
+      ? 'Desmarcar Todos'
+      : '✓ Selecionar Todos';
+    document.getElementById('selectAllText').textContent = text;
+  }
+
+  function rotateSelected(degrees) {
+    let rotatedCount = 0;
+    pdfFiles.forEach(pdf => {
+      if (selectedFiles.has(pdf.id)) {
+        pdf.rotation = (pdf.rotation + degrees) % 360;
+        if (pdf.rotation < 0) pdf.rotation += 360;
+        rotatedCount++;
+      }
+    });
+
+    renderPdfGrid();
+    showMessage(`✅ ${rotatedCount} arquivo(s) rotacionado(s)`, 'success');
+  }
+
+  async function processDownload() {
+    if (pdfFiles.length === 0) {
+      showMessage('❌ Nenhum arquivo para processar', 'error');
+      return;
+    }
+
+    showMessage('⏳ Processando PDFs... Aguarde...', 'info');
+
+    try {
+      const formData = new FormData();
+
+      // Adicionar arquivos e rotações
+      pdfFiles.forEach(pdf => {
+        formData.append('files', pdf.file);
+        formData.append('rotations', pdf.rotation.toString());
+      });
+
+      // Chamar API
+      const response = await fetch(`${API_BASE_URL}/api/rotatepdf/batch`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Erro ao processar PDFs');
+      }
+
+      // Baixar arquivo
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      // Nome do arquivo baseado na resposta
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'pdfs_rotacionados.zip';
+
+      if (contentDisposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showMessage('✅ Download concluído com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro no download:', error);
+      showMessage(`❌ Erro: ${error.message}`, 'error');
+    }
+  }
+
+  function clearAll() {
+    if (confirm('Deseja limpar todos os arquivos?')) {
+      pdfFiles = [];
+      selectedFiles.clear();
+      updateUI();
+      renderPdfGrid();
+      showMessage('🗑️ Arquivos limpos', 'info');
+    }
+  }
+
+  function updateUI() {
+    document.getElementById('fileCount').textContent = pdfFiles.length;
+    document.getElementById('previewSection').style.display = pdfFiles.length > 0 ? 'block' : 'none';
+    updateSelectAllButton();
+  }
+
+  function showMessage(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    messageArea.textContent = message;
+    messageArea.className = `message-area ${type}`;
+
+    // Auto-hide após 5 segundos (exceto erros)
+    if (type !== 'error') {
+      setTimeout(() => {
+        messageArea.style.display = 'none';
+      }, 5000);
+    }
+  }
+</script>

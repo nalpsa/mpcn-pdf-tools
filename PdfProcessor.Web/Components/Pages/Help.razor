@@ -1,0 +1,162 @@
+@page "/help"
+
+<PageTitle>Documentação - PDF Processor</PageTitle>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-icon">❓</div>
+    <div>
+      <h1>Documentação</h1>
+      <p class="subtitle">Guia completo de uso do sistema</p>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <h2>🛠️ Ferramentas PDF</h2>
+
+    <div class="help-section">
+      <h3>🔄 Rotacionar PDF</h3>
+      <p>Permite rotacionar páginas de PDFs com preview em tempo real.</p>
+      <ul>
+        <li><strong>Entrada:</strong> Múltiplos arquivos PDF</li>
+        <li><strong>Ângulos:</strong> 90°, 180°, 270°</li>
+        <li><strong>Saída:</strong> PDFs rotacionados individualmente ou em ZIP</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🔗 Mesclar PDF</h3>
+      <p>Combina múltiplos PDFs em um único arquivo.</p>
+      <ul>
+        <li><strong>Entrada:</strong> 2 ou mais arquivos PDF</li>
+        <li><strong>Recursos:</strong> Seleção de páginas específicas, ordem customizada</li>
+        <li><strong>Saída:</strong> Um único PDF mesclado</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🗜️ Comprimir PDF</h3>
+      <p>Reduz o tamanho de arquivos PDF.</p>
+      <ul>
+        <li><strong>Níveis:</strong> Baixo, Médio, Alto</li>
+        <li><strong>Opções:</strong> Remoção de imagens (opcional)</li>
+        <li><strong>Saída:</strong> PDFs comprimidos com estatísticas de economia</li>
+      </ul>
+    </div>
+
+    <h2>🏦 Extração Bancária</h2>
+
+    <div class="help-section">
+      <h3>🟧 Itaú - Cash Transactions</h3>
+      <p>Extrai transações de cash do Itaú em múltiplas moedas.</p>
+      <ul>
+        <li><strong>Seção detectada:</strong> "Cash Transactions"</li>
+        <li><strong>Moedas suportadas:</strong> USD, EUR, BRL, etc.</li>
+        <li><strong>Múltiplas contas:</strong> Detecta automaticamente</li>
+        <li><strong>Múltiplas páginas:</strong> Processa até encontrar "Closing Balance"</li>
+        <li><strong>Saída:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>💳 Itaú - Movimentação Bancária</h3>
+      <p>Extrai movimentação completa de conta corrente do Itaú.</p>
+      <ul>
+        <li><strong>Seção detectada:</strong> "Conta Corrente | Movimentação"</li>
+        <li><strong>Colunas:</strong> Data, Descrição, Entradas, Saídas, Saldo</li>
+        <li><strong>Correção automática:</strong> Datas em branco são preenchidas</li>
+        <li><strong>Múltiplas contas:</strong> Separa por conta automaticamente</li>
+        <li><strong>Saída:</strong> Excel com uma aba por conta</li>
+      </ul>
+      <div class="info-box warning">
+        <div class="info-icon">⚠️</div>
+        <div>
+          <strong>Observações importantes:</strong>
+          <ul>
+            <li>Excluir linhas "Saldo Aplic Aut Mais" manualmente no Excel após extração</li>
+            <li>Verificar linha ao lado de "P = poupança automática"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h2>📝 Informações Gerais</h2>
+
+    <div class="help-section">
+      <h3>📏 Limites</h3>
+      <ul>
+        <li><strong>Tamanho máximo por arquivo:</strong> 16MB</li>
+        <li><strong>Formatos suportados:</strong> PDF</li>
+        <li><strong>Quantidade de arquivos:</strong> Até 20 por operação</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🔒 Segurança</h3>
+      <ul>
+        <li>Arquivos são processados temporariamente</li>
+        <li>Dados não são armazenados após o processamento</li>
+        <li>Validação de tipos de arquivo</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>💡 Dicas de Uso</h3>
+      <ul>
+        <li>Certifique-se de que os PDFs não estão protegidos por senha</li>
+        <li>Para melhores resultados, use PDFs com boa qualidade</li>
+        <li>Em caso de erro, tente processar os arquivos individualmente</li>
+        <li>Verifique sempre os resultados após a extração</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  .help-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+  }
+
+  .help-section h3 {
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+  }
+
+  .help-section p {
+    color: #4a5568;
+    margin: 0 0 1rem 0;
+    line-height: 1.6;
+  }
+
+  .help-section ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .help-section li {
+    color: #4a5568;
+    margin: 0.5rem 0;
+    line-height: 1.6;
+  }
+
+  .help-section strong {
+    color: #2d3748;
+  }
+
+  .content-card h2 {
+    color: #2d3748;
+    font-size: 1.75rem;
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .content-card h2:first-child {
+    margin-top: 0;
+  }
+</style>

@@ -1,0 +1,303 @@
+@page "/compress-pdf"
+@page "/comprimir"
+
+<PageTitle>Comprimir PDF - PDF Processor</PageTitle>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-icon">🗜️</div>
+    <div>
+      <h1>Comprimir PDF</h1>
+      <p class="subtitle">Reduza o tamanho de arquivos PDF mantendo a qualidade</p>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="info-box info">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <strong>Como funciona:</strong>
+        <ul>
+          <li>Selecione um ou múltiplos arquivos PDF</li>
+          <li>Escolha o nível de compressão (Baixo, Médio, Alto)</li>
+          <li>Opcionalmente, remova imagens para maior compressão</li>
+          <li>Baixe os arquivos comprimidos</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <h3>📁 Selecionar Arquivos</h3>
+      <InputFile OnChange="@HandleFileSelection" multiple accept=".pdf" class="file-input" />
+
+      @if (selectedFiles.Count > 0)
+      {
+        <div class="files-list">
+          <h4>Arquivos selecionados: @selectedFiles.Count</h4>
+          @foreach (var file in selectedFiles)
+          {
+            <div class="file-item">
+              <span class="file-icon">📄</span>
+              <span class="file-name">@file.Name</span>
+              <span class="file-size">@FormatFileSize(file.Size)</span>
+            </div>
+          }
+        </div>
+
+        <div class="compression-options">
+          <h4>Nível de Compressão</h4>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="compression" value="low" checked="@(compressionLevel == "low")"
+                @onchange="@(() => compressionLevel = "low")" />
+              <span>
+                <strong>Baixo</strong>
+                <small>Melhor qualidade, menor compressão</small>
+              </span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="compression" value="medium" checked="@(compressionLevel == "medium")"
+                @onchange="@(() => compressionLevel = "medium")" />
+              <span>
+                <strong>Médio</strong>
+                <small>Equilíbrio entre qualidade e tamanho</small>
+              </span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="compression" value="high" checked="@(compressionLevel == "high")"
+                @onchange="@(() => compressionLevel = "high")" />
+              <span>
+                <strong>Alto</strong>
+                <small>Máxima compressão, qualidade reduzida</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="checkbox-option">
+            <label>
+              <input type="checkbox" @bind="removeImages" />
+              <span>Remover imagens para compressão máxima</span>
+            </label>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="action-section">
+      <button class="btn btn-primary" disabled="@(selectedFiles.Count == 0)" @onclick="ProcessFiles">
+        🗜️ Comprimir PDFs
+      </button>
+
+      <button class="btn btn-secondary" @onclick="ClearFiles">
+        🗑️ Limpar
+      </button>
+    </div>
+
+    @if (isProcessing)
+    {
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Comprimindo arquivos...</p>
+      </div>
+    }
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+      <div class="alert @alertClass">
+        @statusMessage
+      </div>
+    }
+  </div>
+
+  <div class="feature-boxes">
+    <div class="feature-box">
+      <div class="feature-icon">⚙️</div>
+      <h4>3 Níveis</h4>
+      <p>Escolha o nível ideal de compressão</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">🖼️</div>
+      <h4>Otimização de Imagens</h4>
+      <p>Compressão inteligente de imagens</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">📊</div>
+      <h4>Estatísticas</h4>
+      <p>Veja quanto espaço economizou</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .compression-options {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 8px;
+  }
+
+  .compression-options h4 {
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+  }
+
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .radio-option:hover {
+    border-color: #667eea;
+  }
+
+  .radio-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .radio-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .radio-option strong {
+    color: #2d3748;
+    font-size: 1rem;
+  }
+
+  .radio-option small {
+    color: #718096;
+    font-size: 0.875rem;
+  }
+
+  .checkbox-option {
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+  }
+
+  .checkbox-option label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .checkbox-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .checkbox-option span {
+    color: #2d3748;
+    font-weight: 500;
+  }
+</style>
+
+@code {
+  private List<IBrowserFile> selectedFiles = new();
+  private bool isProcessing = false;
+  private string statusMessage = string.Empty;
+  private string alertClass = string.Empty;
+  private string compressionLevel = "medium";
+  private bool removeImages = false;
+  private const long MaxFileSize = 16 * 1024 * 1024; // 16MB
+
+  private void HandleFileSelection(InputFileChangeEventArgs e)
+  {
+    selectedFiles.Clear();
+    statusMessage = string.Empty;
+
+    foreach (var file in e.GetMultipleFiles(10))
+    {
+      if (file.Size > MaxFileSize)
+      {
+        statusMessage = $"Arquivo {file.Name} excede o tamanho máximo de 16MB";
+        alertClass = "alert-error";
+        continue;
+      }
+
+      if (!file.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+      {
+        statusMessage = $"Arquivo {file.Name} não é um PDF válido";
+        alertClass = "alert-error";
+        continue;
+      }
+
+      selectedFiles.Add(file);
+    }
+
+    if (selectedFiles.Count > 0)
+    {
+      statusMessage = $"{selectedFiles.Count} arquivo(s) selecionado(s) com sucesso!";
+      alertClass = "alert-success";
+    }
+  }
+
+  private async Task ProcessFiles()
+  {
+    if (selectedFiles.Count == 0) return;
+
+    isProcessing = true;
+    statusMessage = $"Comprimindo arquivos com nível {compressionLevel}...";
+    alertClass = "alert-info";
+
+    try
+    {
+      // TODO: Implementar chamada para a API
+      await Task.Delay(2000); // Simulação
+
+      statusMessage = $"✅ {selectedFiles.Count} arquivo(s) comprimido(s) com sucesso!";
+      alertClass = "alert-success";
+    }
+    catch (Exception ex)
+    {
+      statusMessage = $"❌ Erro ao processar: {ex.Message}";
+      alertClass = "alert-error";
+    }
+    finally
+    {
+      isProcessing = false;
+    }
+  }
+
+  private void ClearFiles()
+  {
+    selectedFiles.Clear();
+    statusMessage = string.Empty;
+    compressionLevel = "medium";
+    removeImages = false;
+  }
+
+  private string FormatFileSize(long bytes)
+  {
+    string[] sizes = { "B", "KB", "MB", "GB" };
+    double len = bytes;
+    int order = 0;
+
+    while (len >= 1024 && order < sizes.Length - 1)
+    {
+      order++;
+      len = len / 1024;
+    }
+
+    return $"{len:0.##} {sizes[order]}";
+  }
+}

@@ -1,0 +1,185 @@
+@page "/merge-pdf"
+@page "/mesclar"
+
+<PageTitle>Mesclar PDF - PDF Processor</PageTitle>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-icon">🔗</div>
+    <div>
+      <h1>Mesclar PDF</h1>
+      <p class="subtitle">Combine múltiplos PDFs em um único arquivo</p>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="info-box info">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <strong>Como funciona:</strong>
+        <ul>
+          <li>Selecione 2 ou mais arquivos PDF</li>
+          <li>Defina a ordem de mesclagem (opcional)</li>
+          <li>Selecione páginas específicas de cada arquivo (opcional)</li>
+          <li>Baixe o PDF mesclado</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <h3>📁 Selecionar Arquivos (mínimo 2)</h3>
+      <InputFile OnChange="@HandleFileSelection" multiple accept=".pdf" class="file-input" />
+
+      @if (selectedFiles.Count > 0)
+      {
+        <div class="files-list">
+          <h4>Arquivos selecionados: @selectedFiles.Count</h4>
+          @foreach (var file in selectedFiles)
+          {
+            <div class="file-item">
+              <span class="file-icon">📄</span>
+              <span class="file-name">@file.Name</span>
+              <span class="file-size">@FormatFileSize(file.Size)</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="action-section">
+      <button class="btn btn-primary" disabled="@(selectedFiles.Count < 2)" @onclick="ProcessFiles">
+        🔗 Mesclar PDFs
+      </button>
+
+      <button class="btn btn-secondary" @onclick="ClearFiles">
+        🗑️ Limpar
+      </button>
+    </div>
+
+    @if (isProcessing)
+    {
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Mesclando arquivos...</p>
+      </div>
+    }
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+      <div class="alert @alertClass">
+        @statusMessage
+      </div>
+    }
+  </div>
+
+  <div class="feature-boxes">
+    <div class="feature-box">
+      <div class="feature-icon">📑</div>
+      <h4>Seleção de Páginas</h4>
+      <p>Escolha páginas específicas de cada PDF</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">🔢</div>
+      <h4>Ordem Customizada</h4>
+      <p>Defina a ordem de mesclagem</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">📦</div>
+      <h4>Sem Limites</h4>
+      <p>Mescle quantos PDFs precisar</p>
+    </div>
+  </div>
+</div>
+
+@code {
+  private List<IBrowserFile> selectedFiles = new();
+  private bool isProcessing = false;
+  private string statusMessage = string.Empty;
+  private string alertClass = string.Empty;
+  private const long MaxFileSize = 16 * 1024 * 1024; // 16MB
+
+  private void HandleFileSelection(InputFileChangeEventArgs e)
+  {
+    selectedFiles.Clear();
+    statusMessage = string.Empty;
+
+    foreach (var file in e.GetMultipleFiles(20))
+    {
+      if (file.Size > MaxFileSize)
+      {
+        statusMessage = $"Arquivo {file.Name} excede o tamanho máximo de 16MB";
+        alertClass = "alert-error";
+        continue;
+      }
+
+      if (!file.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+      {
+        statusMessage = $"Arquivo {file.Name} não é um PDF válido";
+        alertClass = "alert-error";
+        continue;
+      }
+
+      selectedFiles.Add(file);
+    }
+
+    if (selectedFiles.Count > 0)
+    {
+      statusMessage = $"{selectedFiles.Count} arquivo(s) selecionado(s) com sucesso!";
+      alertClass = "alert-success";
+    }
+
+    if (selectedFiles.Count == 1)
+    {
+      statusMessage = "⚠️ Selecione pelo menos 2 arquivos para mesclar";
+      alertClass = "alert-warning";
+    }
+  }
+
+  private async Task ProcessFiles()
+  {
+    if (selectedFiles.Count < 2) return;
+
+    isProcessing = true;
+    statusMessage = "Mesclando arquivos...";
+    alertClass = "alert-info";
+
+    try
+    {
+      // TODO: Implementar chamada para a API
+      await Task.Delay(2000); // Simulação
+
+      statusMessage = $"✅ {selectedFiles.Count} arquivo(s) mesclado(s) com sucesso!";
+      alertClass = "alert-success";
+    }
+    catch (Exception ex)
+    {
+      statusMessage = $"❌ Erro ao processar: {ex.Message}";
+      alertClass = "alert-error";
+    }
+    finally
+    {
+      isProcessing = false;
+    }
+  }
+
+  private void ClearFiles()
+  {
+    selectedFiles.Clear();
+    statusMessage = string.Empty;
+  }
+
+  private string FormatFileSize(long bytes)
+  {
+    string[] sizes = { "B", "KB", "MB", "GB" };
+    double len = bytes;
+    int order = 0;
+
+    while (len >= 1024 && order < sizes.Length - 1)
+    {
+      order++;
+      len = len / 1024;
+    }
+
+    return $"{len:0.##} {sizes[order]}";
+  }
+}
