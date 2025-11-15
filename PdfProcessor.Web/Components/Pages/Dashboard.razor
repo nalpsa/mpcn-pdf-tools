@@ -15,7 +15,7 @@
       <h2>🛠️ Ferramentas PDF</h2>
     </div>
 
-    <div class="card tool-card" @onclick="@(() => NavigateTo("/rotate-pdf"))">
+    <div class="card tool-card" onclick="window.location.href='/rotate-pdf'">
       <div class="card-icon">🔄</div>
       <div class="card-content">
         <h3>Rotacionar PDF</h3>
@@ -24,16 +24,7 @@
       </div>
     </div>
 
-    <div class="card tool-card" @onclick="@(() => NavigateTo("/merge-pdf"))">
-      <div class="card-icon">🔗</div>
-      <div class="card-content">
-        <h3>Mesclar PDF</h3>
-        <p>Combine múltiplos PDFs em um único arquivo</p>
-        <span class="card-badge">Seleção de páginas</span>
-      </div>
-    </div>
-
-    <div class="card tool-card" @onclick="@(() => NavigateTo("/compress-pdf"))">
+    <div class="card tool-card" onclick="window.location.href='/compress-pdf'">
       <div class="card-icon">🗜️</div>
       <div class="card-content">
         <h3>Comprimir PDF</h3>
@@ -42,31 +33,39 @@
       </div>
     </div>
 
+    <div class="card tool-card coming-soon" title="Em breve">
+      <div class="card-icon">🔗</div>
+      <div class="card-content">
+        <h3>Mesclar PDF</h3>
+        <p>Combine múltiplos PDFs em um único arquivo</p>
+        <span class="card-badge disabled">Em breve</span>
+      </div>
+    </div>
+
     <!-- Seção: Bancos -->
     <div class="section-header">
       <h2>🏦 Extração Bancária</h2>
     </div>
 
-    <div class="card bank-card" @onclick="@(() => NavigateTo("/itau-cash"))">
+    <div class="card bank-card coming-soon" title="Em breve">
       <div class="card-icon">🟧</div>
       <div class="card-content">
         <h3>Itaú - Cash Transactions</h3>
         <p>Extração de transações em múltiplas moedas (USD, EUR, BRL)</p>
-        <span class="card-badge">Múltiplas contas</span>
+        <span class="card-badge disabled">Em breve</span>
       </div>
     </div>
 
-    <div class="card bank-card" @onclick="@(() => NavigateTo("/itau-movimentacao"))">
+    <div class="card bank-card coming-soon" title="Em breve">
       <div class="card-icon">💳</div>
       <div class="card-content">
         <h3>Itaú - Movimentação</h3>
         <p>Extração completa de movimentação bancária</p>
-        <span class="card-badge">Correção automática</span>
+        <span class="card-badge disabled">Em breve</span>
       </div>
     </div>
 
-    <!-- Coming Soon -->
-    <div class="card coming-soon-card">
+    <div class="card bank-card coming-soon" title="Em breve">
       <div class="card-icon">🔜</div>
       <div class="card-content">
         <h3>Outros Bancos</h3>
@@ -99,12 +98,233 @@
   </div>
 </div>
 
-@code {
-  [Inject]
-  public NavigationManager Navigation { get; set; } = default!;
-
-  private void NavigateTo(string url)
-  {
-    Navigation.NavigateTo(url);
+<style>
+  .dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
   }
-}
+
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    margin: 0;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .section-header {
+    grid-column: 1 / -1;
+    margin-top: 2rem;
+  }
+
+  .section-header:first-child {
+    margin-top: 0;
+  }
+
+  .section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #e2e8f0;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+    user-select: none;
+  }
+
+  .card:hover:not(.coming-soon) {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .card:active:not(.coming-soon) {
+    transform: translateY(-2px);
+  }
+
+  .card.coming-soon {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .card.coming-soon:hover {
+    transform: none;
+  }
+
+  .tool-card {
+    border-left: 4px solid #667eea;
+  }
+
+  .tool-card:hover:not(.coming-soon) {
+    border-left-color: #764ba2;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  }
+
+  .bank-card {
+    border-left: 4px solid #48bb78;
+  }
+
+  .bank-card:hover:not(.coming-soon) {
+    border-left-color: #38a169;
+    box-shadow: 0 8px 24px rgba(72, 187, 120, 0.3);
+  }
+
+  .coming-soon-card {
+    border-left: 4px solid #cbd5e0;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .card-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .card-content p {
+    font-size: 0.95rem;
+    color: #718096;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+  }
+
+  .card-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .card-badge.disabled {
+    background: #cbd5e0;
+    color: #718096;
+  }
+
+  .system-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 2px solid #e2e8f0;
+  }
+
+  .info-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+  }
+
+  .info-icon {
+    font-size: 2rem;
+  }
+
+  .info-card strong {
+    color: #2d3748;
+    font-weight: 600;
+  }
+
+  .info-card div {
+    color: #4a5568;
+    font-size: 0.95rem;
+  }
+
+  /* Responsivo */
+  @@media (max-width: 768px) {
+    .dashboard-container {
+      padding: 1rem;
+    }
+
+    .dashboard-header h1 {
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+    }
+
+    .cards-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section-header h2 {
+      font-size: 1.25rem;
+    }
+
+    .card {
+      padding: 1.5rem;
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+    }
+
+    .system-info {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Animação de entrada */
+  @@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card {
+    animation: fadeInUp 0.5s ease-out;
+  }
+
+  .card:nth-child(2) { animation-delay: 0.1s; }
+  .card:nth-child(3) { animation-delay: 0.2s; }
+  .card:nth-child(4) { animation-delay: 0.3s; }
+  .card:nth-child(6) { animation-delay: 0.4s; }
+  .card:nth-child(7) { animation-delay: 0.5s; }
+  .card:nth-child(8) { animation-delay: 0.6s; }
+</style>
