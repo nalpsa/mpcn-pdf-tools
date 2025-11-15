@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 // Registrar serviços do PDF Processor
 builder.Services.AddScoped<IPdfRotateService, PdfRotateService>();
 builder.Services.AddScoped<IPdfCompressService, PdfCompressService>();
+builder.Services.AddScoped<IPdfMergeService, PdfMergeService>();
 
 // ✅ CORS ATUALIZADO: Aceita localhost E IP da rede
 builder.Services.AddCors(options =>
