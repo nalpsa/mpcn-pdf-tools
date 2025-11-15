@@ -1,4 +1,5 @@
 using PdfProcessor.Core.Interfaces;
+using PdfProcessor.Infrastructure.Parsers;
 using PdfProcessor.Infrastructure.PdfServices;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IPdfRotateService, PdfRotateService>();
 builder.Services.AddScoped<IPdfCompressService, PdfCompressService>();
 builder.Services.AddScoped<IPdfMergeService, PdfMergeService>();
+builder.Services.AddScoped<IItauMovimentacaoParser, ItauMovimentacaoParser>();
 
 // ✅ CORS ATUALIZADO: Aceita localhost E IP da rede
 builder.Services.AddCors(options =>

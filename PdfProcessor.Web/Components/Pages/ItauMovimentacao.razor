@@ -1,6 +1,7 @@
 @page "/itau-movimentacao"
+@page "/itau-mov"
 
-<PageTitle>Itaú Movimentação - PDF Processor</PageTitle>
+<PageTitle>Itaú - Movimentação Bancária - PDF Processor</PageTitle>
 
 <div class="page-container">
   <div class="page-header">
@@ -13,178 +14,607 @@
 
   <div class="content-card">
     <div class="info-box info">
-      <div class="info-icon">ℹ️</div>
+      <div class="info-icon">📊</div>
       <div>
-        <strong>Formato detectado:</strong>
-        <ul>
-          <li>Seção: "Conta Corrente | Movimentação"</li>
-          <li>Detecta agência e conta automaticamente</li>
-          <li>Corrige datas em branco</li>
-          <li>Colunas: Data, Descrição, Entradas, Saídas, Saldo</li>
-          <li>Saída: Excel com uma aba por conta</li>
-        </ul>
+        <strong>Extração de Movimentação Bancária:</strong>
+        <p style="margin: 0.5rem 0 0 0; color: #666;">
+          O sistema identifica automaticamente <strong>múltiplas contas</strong> pelos códigos de agência e conta corrente,
+          criando uma <strong>aba separada</strong> para cada conta no arquivo Excel final.
+        </p>
       </div>
     </div>
 
-    <div class="info-box warning">
+    <div class="features-list">
+      <div class="feature-item">
+        <span class="feature-icon">🔍</span>
+        <span>Identifica a seção "Conta Corrente | Movimentação"</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🏦</span>
+        <span>Detecta agência e conta automaticamente</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📋</span>
+        <span>Extrai todas as movimentações da tabela</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📅</span>
+        <span>Corrige datas em branco automaticamente</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">💰</span>
+        <span>Classifica valores em entrada, saída e saldo</span>
+      </div>
+    </div>
+
+    <div class="info-box info">
       <div class="info-icon">⚠️</div>
       <div>
-        <strong>Importante:</strong>
-        <ul>
-          <li>Excluir linhas "Saldo Aplic Aut Mais"</li>
-          <li>Verificar linha ao lado de "P = poupança automática"</li>
-        </ul>
+        <strong>Pontos importantes para ajustar no XLSX:</strong>
+        <p style="margin: 0.5rem 0 0 0; color: #666;">
+          A Primeira e última linha de cada mês deve ser <strong>EXCLUÍDA</strong> Pois estas linhas não fazem parte da movimentação.
+          A primeira linha tem na descrição algo como <strong>"pela Bolsa de Valores"</strong>, e a última tem a descrição, algo como <strong>"Saldo em C/C"</strong>.
+        </p>
       </div>
     </div>
 
     <div class="upload-section">
-      <h3>📁 Selecionar Extratos de Movimentação</h3>
-      <InputFile OnChange="@HandleFileSelection" multiple accept=".pdf" class="file-input" />
-
-      @if (selectedFiles.Count > 0)
-      {
-        <div class="files-list">
-          <h4>Arquivos selecionados: @selectedFiles.Count</h4>
-          @foreach (var file in selectedFiles)
-          {
-            <div class="file-item">
-              <span class="file-icon">📄</span>
-              <span class="file-name">@file.Name</span>
-              <span class="file-size">@FormatFileSize(file.Size)</span>
-            </div>
-          }
-        </div>
-      }
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">Clique aqui ou arraste os PDFs</div>
+        <div class="upload-hint">Selecione múltiplos PDFs de extrato Itaú (máx. 16MB cada)</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
     </div>
 
-    <div class="action-section">
-      <button class="btn btn-primary" disabled="@(selectedFiles.Count == 0)" @onclick="ProcessFiles">
-        💳 Processar Movimentação
-      </button>
+    <!-- Lista de arquivos selecionados -->
+    <div id="filesSelected" class="files-selected" style="display: none;">
+      <div class="files-header">📋 Arquivos Selecionados:</div>
+      <div id="filesList" class="files-list"></div>
+      <div id="filesSummary" class="files-summary"></div>
+    </div>
 
-      <button class="btn btn-secondary" @onclick="ClearFiles">
-        🗑️ Limpar
+    <!-- Botão de processamento -->
+    <div id="actionButtons" class="action-section" style="display: none;">
+      <button class="btn btn-primary" id="processBtn" onclick="processFiles()" disabled>
+        Processar PDFs e Gerar Consolidado
       </button>
     </div>
 
-    @if (isProcessing)
-    {
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Extraindo movimentações do Itaú...</p>
-      </div>
-    }
+    <!-- Loading -->
+    <div id="loadingIndicator" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p id="loadingText">Processando extratos do Itaú... Aguarde por favor.</p>
+      <div id="progressInfo" class="progress-info"></div>
+    </div>
 
-    @if (!string.IsNullOrEmpty(statusMessage))
-    {
-      <div class="alert @alertClass">
-        @statusMessage
-      </div>
-    }
+    <!-- Mensagem de status -->
+    <div id="statusMessage" class="alert" style="display: none;"></div>
   </div>
 
   <div class="feature-boxes">
     <div class="feature-box">
-      <div class="feature-icon">📅</div>
-      <h4>Correção de Datas</h4>
-      <p>Datas em branco são preenchidas automaticamente</p>
-    </div>
-    <div class="feature-box">
-      <div class="feature-icon">🏦</div>
+      <div class="feature-icon">📊</div>
       <h4>Múltiplas Contas</h4>
-      <p>Detecta e separa múltiplas contas</p>
+      <p>Processa várias contas em um único Excel</p>
     </div>
     <div class="feature-box">
-      <div class="feature-icon">💰</div>
-      <h4>Classificação</h4>
-      <p>Entradas, saídas e saldo organizados</p>
+      <div class="feature-icon">🔄</div>
+      <h4>Correção Automática</h4>
+      <p>Corrige datas e valores automaticamente</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">⚡</div>
+      <h4>Batch Processing</h4>
+      <p>Processa múltiplos PDFs de uma vez</p>
     </div>
   </div>
 </div>
 
-@code {
-  private List<IBrowserFile> selectedFiles = new();
-  private bool isProcessing = false;
-  private string statusMessage = string.Empty;
-  private string alertClass = string.Empty;
-  private const long MaxFileSize = 16 * 1024 * 1024; // 16MB
+<style>
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
 
-  private void HandleFileSelection(InputFileChangeEventArgs e)
-  {
-    selectedFiles.Clear();
-    statusMessage = string.Empty;
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
 
-    foreach (var file in e.GetMultipleFiles(10))
-    {
-      if (file.Size > MaxFileSize)
-      {
-        statusMessage = $"Arquivo {file.Name} excede o tamanho máximo de 16MB";
-        alertClass = "alert-error";
+  .header-icon {
+    font-size: 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+  }
+
+  .subtitle {
+    color: #718096;
+    margin: 0;
+  }
+
+  .content-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .info-box {
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .info-box.info {
+    background: #fff8f0;
+    border-left: 4px solid #ff6900;
+  }
+
+  .info-icon {
+    font-size: 1.5rem;
+  }
+
+  .features-list {
+    background: #fffbf0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #fff2e6;
+  }
+
+  .feature-item:last-child {
+    border-bottom: none;
+  }
+
+  .feature-icon {
+    font-size: 1.2rem;
+  }
+
+  .upload-section {
+    margin-bottom: 2rem;
+  }
+
+  .upload-area {
+    border: 3px dashed #cbd5e0;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .upload-area:hover {
+    border-color: #ff6900;
+    background: #fff8f0;
+  }
+
+  .upload-icon {
+    font-size: 3rem;
+    color: #cbd5e0;
+    margin-bottom: 1rem;
+  }
+
+  .upload-area:hover .upload-icon {
+    color: #ff6900;
+  }
+
+  .upload-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+
+  .upload-hint {
+    font-size: 0.9rem;
+    color: #718096;
+  }
+
+  .hidden-file-input {
+    display: none;
+  }
+
+  .files-selected {
+    background: #f7fafc;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .files-header {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2d3748;
+  }
+
+  .files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #4a5568;
+  }
+
+  .files-summary {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #718096;
+  }
+
+  .action-section {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #ff6900 0%, #fcb045 100%);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 105, 0, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #ff6900;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .progress-info {
+    font-size: 0.9rem;
+    color: #718096;
+    margin-top: 1rem;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+
+  .alert-success {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left: 4px solid #38a169;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #742a2a;
+    border-left: 4px solid #e53e3e;
+  }
+
+  .alert-info {
+    background: #bee3f8;
+    color: #2c5282;
+    border-left: 4px solid #3182ce;
+  }
+
+  .feature-boxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .feature-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .feature-box h4 {
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .feature-box p {
+    color: #718096;
+    margin: 0;
+  }
+
+  @@media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+
+    .action-section {
+      flex-direction: column;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  console.log('🟢 Itaú Movimentação carregado');
+
+  // Configuração da API
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5239' 
+    : 'http://10.0.0.50:5239';
+  
+  console.log('🔧 API configurada:', API_BASE_URL);
+
+  // Estado global
+  let selectedFiles = [];
+
+  // Setup - executar quando a página carregar
+  (function() {
+    console.log('🔧 Configurando event listeners...');
+    
+    // Tentar múltiplas vezes até o elemento estar disponível
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const setupFileInput = function() {
+      const fileInput = document.getElementById('fileInput');
+      
+      if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelection);
+        console.log('✅ Event listener adicionado ao fileInput');
+        return true;
+      } else {
+        attempts++;
+        if (attempts < maxAttempts) {
+          console.log(`⏳ Tentativa ${attempts}/${maxAttempts} - fileInput não encontrado, tentando novamente...`);
+          setTimeout(setupFileInput, 100);
+        } else {
+          console.error('❌ fileInput não encontrado após', maxAttempts, 'tentativas');
+        }
+        return false;
+      }
+    };
+    
+    // Iniciar setup
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupFileInput);
+    } else {
+      setupFileInput();
+    }
+  })();
+
+  function handleFileSelection(event) {
+    console.log('\n📂 Arquivos selecionados:', event.target.files.length);
+    
+    const files = Array.from(event.target.files);
+    selectedFiles = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.log(`\n📄 Processando arquivo ${i + 1}/${files.length}: ${file.name}`);
+
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        showMessage('Apenas arquivos PDF são permitidos', 'error');
         continue;
       }
 
-      if (!file.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-      {
-        statusMessage = $"Arquivo {file.Name} não é um PDF válido";
-        alertClass = "alert-error";
+      if (file.size > 16 * 1024 * 1024) {
+        showMessage(`Arquivo ${file.name} excede 16MB`, 'error');
         continue;
       }
 
-      selectedFiles.Add(file);
+      selectedFiles.push(file);
+      console.log(`✅ Arquivo adicionado: ${file.name}`);
     }
 
-    if (selectedFiles.Count > 0)
-    {
-      statusMessage = $"{selectedFiles.Count} arquivo(s) selecionado(s) com sucesso!";
-      alertClass = "alert-success";
+    console.log(`\n🎨 Renderizando lista com ${selectedFiles.length} arquivos`);
+    renderFilesList();
+  }
+
+  function renderFilesList() {
+    const filesSelected = document.getElementById('filesSelected');
+    const filesList = document.getElementById('filesList');
+    const filesSummary = document.getElementById('filesSummary');
+    const actionButtons = document.getElementById('actionButtons');
+    const processBtn = document.getElementById('processBtn');
+
+    if (selectedFiles.length === 0) {
+      filesSelected.style.display = 'none';
+      actionButtons.style.display = 'none';
+      return;
+    }
+
+    filesSelected.style.display = 'block';
+    actionButtons.style.display = 'flex';
+
+    // Renderizar lista
+    filesList.innerHTML = selectedFiles.map((file, index) => `
+      <div class="file-item">
+        <span>📄</span>
+        <span>${file.name}</span>
+        <span style="margin-left: auto; color: #718096;">${formatFileSize(file.size)}</span>
+      </div>
+    `).join('');
+
+    // Resumo
+    const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+    filesSummary.textContent = `Total: ${selectedFiles.length} arquivo(s) • ${formatFileSize(totalSize)}`;
+
+    // Habilitar botão
+    processBtn.disabled = false;
+
+    console.log('✅ Lista renderizada');
+  }
+
+  async function processFiles() {
+    if (selectedFiles.length === 0) {
+      showMessage('Selecione pelo menos um arquivo PDF', 'error');
+      return;
+    }
+
+    console.log(`\n💳 Iniciando processamento de ${selectedFiles.length} arquivo(s)`);
+    
+    showLoading(true, `Processando ${selectedFiles.length} extrato(s) do Itaú...`);
+
+    try {
+      const formData = new FormData();
+
+      // Adicionar arquivos
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append('files', selectedFiles[i]);
+      }
+
+      console.log('📡 Enviando para API...');
+      const response = await fetch(`${API_BASE_URL}/api/itaumovimentacao/batch`, {
+        method: 'POST',
+        body: formData
+      });
+
+      console.log(`📊 Resposta da API: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro na API: ${response.status} - ${errorText}`);
+      }
+
+      // Download do arquivo
+      const blob = await response.blob();
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
+      const fileName = `movimentacao_itau_${timestamp}.xlsx`;
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      console.log(`✅ Download iniciado: ${fileName}`);
+      showMessage(`✅ Processamento concluído! ${selectedFiles.length} extrato(s) processado(s).`, 'success');
+      
+      // Limpar após 3 segundos
+      setTimeout(clearFiles, 3000);
+
+    } catch (error) {
+      console.error('❌ Erro ao processar:', error);
+      showMessage(`❌ Erro ao processar: ${error.message}`, 'error');
+    } finally {
+      showLoading(false);
     }
   }
 
-  private async Task ProcessFiles()
-  {
-    if (selectedFiles.Count == 0) return;
-
-    isProcessing = true;
-    statusMessage = "Extraindo movimentações bancárias...";
-    alertClass = "alert-info";
-
-    try
-    {
-      // TODO: Implementar chamada para a API
-      await Task.Delay(3000); // Simulação
-
-      statusMessage = $"✅ {selectedFiles.Count} extrato(s) processado(s) com sucesso!";
-      alertClass = "alert-success";
+  function clearFiles() {
+    selectedFiles = [];
+    
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+      fileInput.value = '';
     }
-    catch (Exception ex)
-    {
-      statusMessage = $"❌ Erro ao processar: {ex.Message}";
-      alertClass = "alert-error";
-    }
-    finally
-    {
-      isProcessing = false;
+    
+    renderFilesList();
+    showMessage('', '');
+    console.log('🗑️ Arquivos limpos');
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function showLoading(show, text = 'Processando...') {
+    const loading = document.getElementById('loadingIndicator');
+    const loadingText = document.getElementById('loadingText');
+    const actionButtons = document.getElementById('actionButtons');
+    
+    if (show) {
+      loading.style.display = 'block';
+      loadingText.textContent = text;
+      actionButtons.style.display = 'none';
+    } else {
+      loading.style.display = 'none';
+      actionButtons.style.display = 'flex';
     }
   }
 
-  private void ClearFiles()
-  {
-    selectedFiles.Clear();
-    statusMessage = string.Empty;
-  }
-
-  private string FormatFileSize(long bytes)
-  {
-    string[] sizes = { "B", "KB", "MB", "GB" };
-    double len = bytes;
-    int order = 0;
-
-    while (len >= 1024 && order < sizes.Length - 1)
-    {
-      order++;
-      len = len / 1024;
+  function showMessage(message, type) {
+    const statusMessage = document.getElementById('statusMessage');
+    
+    if (!message) {
+      statusMessage.style.display = 'none';
+      return;
     }
 
-    return $"{len:0.##} {sizes[order]}";
+    statusMessage.textContent = message;
+    statusMessage.className = 'alert';
+    
+    if (type === 'success') {
+      statusMessage.classList.add('alert-success');
+    } else if (type === 'error') {
+      statusMessage.classList.add('alert-error');
+    } else {
+      statusMessage.classList.add('alert-info');
+    }
+    
+    statusMessage.style.display = 'block';
   }
-}
+</script>
