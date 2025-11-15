@@ -16,6 +16,7 @@ builder.Services.AddScoped<IPdfRotateService, PdfRotateService>();
 builder.Services.AddScoped<IPdfCompressService, PdfCompressService>();
 builder.Services.AddScoped<IPdfMergeService, PdfMergeService>();
 builder.Services.AddScoped<IItauMovimentacaoParser, ItauMovimentacaoParser>();
+builder.Services.AddScoped<IItauCashParser, ItauCashParser>();
 
 // ✅ CORS ATUALIZADO: Aceita localhost E IP da rede
 builder.Services.AddCors(options =>

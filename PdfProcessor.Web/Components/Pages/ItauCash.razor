@@ -1,179 +1,141 @@
 @page "/itau-cash"
+@page "/itau"
 
-<PageTitle>Itaú Cash Transactions - PDF Processor</PageTitle>
+<PageTitle>Itaú - Cash Transactions - PDF Processor</PageTitle>
 
 <div class="page-container">
   <div class="page-header">
-    <div class="header-icon">🟧</div>
+    <div class="header-icon">🏦</div>
     <div>
       <h1>Itaú - Cash Transactions</h1>
-      <p class="subtitle">Extração de transações em múltiplas moedas (USD, EUR, BRL)</p>
+      <p class="subtitle">Extração de transações em múltiplas moedas</p>
     </div>
   </div>
 
   <div class="content-card">
     <div class="info-box info">
-      <div class="info-icon">ℹ️</div>
+      <div class="info-icon">💱</div>
       <div>
-        <strong>Formato suportado:</strong>
-        <ul>
-          <li>Seção: "Cash Transactions"</li>
-          <li>Detecta múltiplas contas automaticamente</li>
-          <li>Suporta múltiplas páginas</li>
-          <li>Moedas: USD, EUR, BRL, etc.</li>
-          <li>Saída: Excel com uma aba por conta</li>
+        <strong>Extração de Cash Transactions:</strong>
+        <p style="margin: 0.5rem 0 0 0; color: #666;">
+          O sistema detecta automaticamente <strong>múltiplas contas no mesmo PDF</strong> (USD, EUR, BRL, etc.), 
+          criando uma <strong>aba separada</strong> para cada conta no arquivo Excel final.
+        </p>
+      </div>
+    </div>
+
+    <div class="info-box warning">
+      <div class="info-icon">⚠️</div>
+      <div>
+        <strong>Melhorias Implementadas:</strong>
+        <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+          <li><strong>Múltiplas Páginas:</strong> Processa tabelas que continuam por várias páginas</li>
+          <li><strong>Múltiplas Contas:</strong> Extrai todas as contas do mesmo PDF</li>
+          <li><strong>Continuação de Tabelas:</strong> Não para até encontrar "Closing Balance"</li>
         </ul>
       </div>
     </div>
 
+    <div class="info-box info">
+      <div class="info-icon">⚠️</div>
+      <div>
+        <strong>Pontos importantes para ajustar no XLSX:</strong>
+        <p style="margin: 0.5rem 0 0 0; color: #666;">
+          Quando a tabela passa de uma página, a última linha de cada página deve ser <strong>AJUSTADA</strong> no XLSX, Pois, após a descrição correta, uma <strong>frase lixo</strong> acaba sendo inserida.
+          Após a descrição correta, é acrescentado algo como <strong>"=== PÁGINA 9 === Transactions Operation Date Value Date Description Value Account Balance"</strong>, e isso deve ser removido.
+        </p>
+      </div>
+    </div>
+
+    <div class="features-list">
+      <div class="feature-item">
+        <span class="feature-icon">🔍</span>
+        <span>Identifica a seção "Cash Transactions"</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🏦</span>
+        <span>Detecta "Opening Balance Account: NUMERO MOEDA"</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">💱</span>
+        <span>Suporta múltiplas moedas (USD, EUR, BRL, etc.)</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📋</span>
+        <span>Extrai todas as transações até "Closing Balance"</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📄</span>
+        <span>Processa tabelas que continuam em várias páginas</span>
+      </div>
+    </div>
+
     <div class="upload-section">
-      <h3>📁 Selecionar Extratos do Itaú</h3>
-      <InputFile OnChange="@HandleFileSelection" multiple accept=".pdf" class="file-input" />
-
-      @if (selectedFiles.Count > 0)
-      {
-        <div class="files-list">
-          <h4>Arquivos selecionados: @selectedFiles.Count</h4>
-          @foreach (var file in selectedFiles)
-          {
-            <div class="file-item">
-              <span class="file-icon">📄</span>
-              <span class="file-name">@file.Name</span>
-              <span class="file-size">@FormatFileSize(file.Size)</span>
-            </div>
-          }
-        </div>
-      }
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">Clique aqui ou arraste os PDFs</div>
+        <div class="upload-hint">Selecione múltiplos PDFs do Itaú (máx. 16MB cada)</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
     </div>
 
-    <div class="action-section">
-      <button class="btn btn-primary" disabled="@(selectedFiles.Count == 0)" @onclick="ProcessFiles">
-        🟧 Processar Itaú Cash
-      </button>
+    <!-- Lista de arquivos -->
+    <div id="filesSelected" class="files-selected" style="display: none;">
+      <div class="files-header">📋 Arquivos Selecionados:</div>
+      <div id="filesList" class="files-list"></div>
+      <div id="filesSummary" class="files-summary"></div>
+    </div>
 
-      <button class="btn btn-secondary" @onclick="ClearFiles">
-        🗑️ Limpar
+    <!-- Botão -->
+    <div id="actionButtons" class="action-section" style="display: none;">
+      <button class="btn btn-primary" id="processBtn" onclick="processFiles()" disabled>
+        Processar PDFs e Gerar Consolidado
       </button>
     </div>
 
-    @if (isProcessing)
-    {
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Extraindo transações do Itaú...</p>
-      </div>
-    }
+    <!-- Loading -->
+    <div id="loadingIndicator" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p id="loadingText">Processando extratos do Itaú... Aguarde por favor.</p>
+      <div id="progressInfo" class="progress-info"></div>
+    </div>
 
-    @if (!string.IsNullOrEmpty(statusMessage))
-    {
-      <div class="alert @alertClass">
-        @statusMessage
-      </div>
-    }
+    <!-- Status -->
+    <div id="statusMessage" class="alert" style="display: none;"></div>
   </div>
 
   <div class="feature-boxes">
     <div class="feature-box">
-      <div class="feature-icon">💰</div>
+      <div class="feature-icon">💱</div>
       <h4>Múltiplas Moedas</h4>
-      <p>Detecta USD, EUR, BRL automaticamente</p>
-    </div>
-    <div class="feature-box">
-      <div class="feature-icon">🏦</div>
-      <h4>Múltiplas Contas</h4>
-      <p>Separa transações por conta</p>
+      <p>USD, EUR, BRL e outras moedas</p>
     </div>
     <div class="feature-box">
       <div class="feature-icon">📊</div>
-      <h4>Excel Consolidado</h4>
-      <p>Uma aba para cada conta detectada</p>
+      <h4>Múltiplas Contas</h4>
+      <p>Processa várias contas em um único Excel</p>
     </div>
+    <div class="feature-box">
+      <div class="feature-icon">⚡</div>
+      <h4>Batch Processing</h4>
+      <p>Processa múltiplos PDFs de uma vez</p>
+    </div>
+  </div>
+
+  <div class="help-section">
+    <h3>💡 Como funciona:</h3>
+    <ol>
+      <li>Selecione múltiplos PDFs do Itaú</li>
+      <li>O sistema identifica automaticamente as seções "Cash Transactions"</li>
+      <li>Para cada conta encontrada (ex: "6086454001 USD"), cria uma aba no Excel</li>
+      <li>Se o mesmo número de conta aparecer com moedas diferentes, cria abas separadas</li>
+      <li>Exemplo de abas: "6086454001_USD", "6086454001_EUR", "1234567890_BRL"</li>
+    </ol>
   </div>
 </div>
 
-@code {
-  private List<IBrowserFile> selectedFiles = new();
-  private bool isProcessing = false;
-  private string statusMessage = string.Empty;
-  private string alertClass = string.Empty;
-  private const long MaxFileSize = 16 * 1024 * 1024; // 16MB
+<!-- style -->
+<link rel="stylesheet" href="css/itau-cash.css" />
 
-  private void HandleFileSelection(InputFileChangeEventArgs e)
-  {
-    selectedFiles.Clear();
-    statusMessage = string.Empty;
 
-    foreach (var file in e.GetMultipleFiles(10))
-    {
-      if (file.Size > MaxFileSize)
-      {
-        statusMessage = $"Arquivo {file.Name} excede o tamanho máximo de 16MB";
-        alertClass = "alert-error";
-        continue;
-      }
-
-      if (!file.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-      {
-        statusMessage = $"Arquivo {file.Name} não é um PDF válido";
-        alertClass = "alert-error";
-        continue;
-      }
-
-      selectedFiles.Add(file);
-    }
-
-    if (selectedFiles.Count > 0)
-    {
-      statusMessage = $"{selectedFiles.Count} arquivo(s) selecionado(s) com sucesso!";
-      alertClass = "alert-success";
-    }
-  }
-
-  private async Task ProcessFiles()
-  {
-    if (selectedFiles.Count == 0) return;
-
-    isProcessing = true;
-    statusMessage = "Extraindo Cash Transactions do Itaú...";
-    alertClass = "alert-info";
-
-    try
-    {
-      // TODO: Implementar chamada para a API
-      await Task.Delay(3000); // Simulação
-
-      statusMessage = $"✅ {selectedFiles.Count} extrato(s) processado(s) com sucesso!";
-      alertClass = "alert-success";
-    }
-    catch (Exception ex)
-    {
-      statusMessage = $"❌ Erro ao processar: {ex.Message}";
-      alertClass = "alert-error";
-    }
-    finally
-    {
-      isProcessing = false;
-    }
-  }
-
-  private void ClearFiles()
-  {
-    selectedFiles.Clear();
-    statusMessage = string.Empty;
-  }
-
-  private string FormatFileSize(long bytes)
-  {
-    string[] sizes = { "B", "KB", "MB", "GB" };
-    double len = bytes;
-    int order = 0;
-
-    while (len >= 1024 && order < sizes.Length - 1)
-    {
-      order++;
-      len = len / 1024;
-    }
-
-    return $"{len:0.##} {sizes[order]}";
-  }
-}
+<script src="/js/itau-cash.js"></script>
