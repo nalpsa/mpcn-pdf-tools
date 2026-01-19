@@ -1,148 +1,280 @@
 console.log('🟢 Itaú Movimentação carregado');
 
-// Configuração da API
-const API_BASE_URL = window.location.hostname === 'localhost' 
-? 'http://localhost:5239' 
-: 'http://10.0.0.50:5239';
+// ✅ CONFIGURAÇÃO DINÂMICA DA API
+function getApiBaseUrl() {
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  
+  console.log('🔍 Detectando configuração de rede...');
+  console.log('  Hostname:', hostname);
+  console.log('  Port:', port);
+  
+  // Se está em localhost, API também está em localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    console.log('✅ Modo: LOCALHOST');
+    return 'http://localhost:5239';
+  }
+  
+  // Se está acessando por IP, a API está no mesmo IP
+  if (hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+    const apiUrl = `http://${hostname}:5239`;
+    console.log('✅ Modo: REDE LOCAL (IP detectado)');
+    console.log('  API URL:', apiUrl);
+    return apiUrl;
+  }
+  
+  // Fallback para localhost
+  console.log('⚠️ Modo: FALLBACK para localhost');
+  return 'http://localhost:5239';
+}
 
+const API_BASE_URL = getApiBaseUrl();
 console.log('🔧 API configurada:', API_BASE_URL);
 
 // Estado global
 let selectedFiles = [];
 
-// Setup - executar quando a página carregar
-(function() {
-console.log('🔧 Configurando event listeners...');
+// ✅ Inicializar quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('🔧 DOM carregado - Iniciando configuração...');
+  setupFileInput();
+  setupDragAndDrop();
+});
 
-// Tentar múltiplas vezes até o elemento estar disponível
-let attempts = 0;
-const maxAttempts = 10;
-
-const setupFileInput = function() {
-    const fileInput = document.getElementById('fileInput');
-    
-    if (fileInput) {
-    fileInput.addEventListener('change', handleFileSelection);
-    console.log('✅ Event listener adicionado ao fileInput');
-    return true;
-    } else {
-    attempts++;
-    if (attempts < maxAttempts) {
-        console.log(`⏳ Tentativa ${attempts}/${maxAttempts} - fileInput não encontrado, tentando novamente...`);
-        setTimeout(setupFileInput, 100);
-    } else {
-        console.error('❌ fileInput não encontrado após', maxAttempts, 'tentativas');
-    }
-    return false;
-    }
-};
-
-// Iniciar setup
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupFileInput);
-} else {
-    setupFileInput();
+// ✅ Configurar file input
+function setupFileInput() {
+  console.log('🔧 Configurando file input...');
+  
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  
+  if (!fileInput) {
+    console.error('❌ ERRO: Elemento #fileInput não encontrado!');
+    setTimeout(setupFileInput, 200);
+    return;
+  }
+  
+  if (!uploadArea) {
+    console.error('❌ ERRO: Elemento #uploadArea não encontrado!');
+    setTimeout(setupFileInput, 200);
+    return;
+  }
+  
+  console.log('✅ Elementos encontrados:', { fileInput, uploadArea });
+  
+  // ✅ IMPORTANTE: Clonar elemento para limpar listeners antigos
+  const newFileInput = fileInput.cloneNode(true);
+  fileInput.parentNode.replaceChild(newFileInput, fileInput);
+  
+  // ✅ Adicionar event listener
+  newFileInput.addEventListener('change', handleFileSelection);
+  
+  // ✅ Click na área de upload (remover onclick inline do HTML)
+  uploadArea.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🖱️ Upload area clicada');
+    newFileInput.click();
+  };
+  
+  console.log('✅ File input configurado com sucesso');
 }
-})();
 
-function handleFileSelection(event) {
-console.log('\n📂 Arquivos selecionados:', event.target.files.length);
+// ✅ NOVO: Configurar Drag & Drop
+function setupDragAndDrop() {
+  console.log('🔧 Configurando Drag & Drop...');
+  
+  const uploadArea = document.getElementById('uploadArea');
+  
+  if (!uploadArea) {
+    console.error('❌ ERRO: Elemento #uploadArea não encontrado!');
+    setTimeout(setupDragAndDrop, 200);
+    return;
+  }
+  
+  // ✅ Prevenir comportamento padrão (abrir PDF em nova aba)
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+  });
+  
+  // ✅ Destacar área ao arrastar
+  ['dragenter', 'dragover'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, highlight, false);
+  });
+  
+  ['dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, unhighlight, false);
+  });
+  
+  // ✅ Lidar com drop
+  uploadArea.addEventListener('drop', handleDrop, false);
+  
+  console.log('✅ Drag & Drop configurado com sucesso');
+}
 
-const files = Array.from(event.target.files);
-selectedFiles = [];
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
 
-for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    console.log(`\n📄 Processando arquivo ${i + 1}/${files.length}: ${file.name}`);
+function highlight(e) {
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.classList.add('drag-over');
+}
 
+function unhighlight(e) {
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  console.log('\n📂 ========== ARQUIVOS ARRASTADOS ==========');
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  
+  console.log('Files:', files);
+  console.log('Total de arquivos:', files.length);
+  
+  // ✅ Processar arquivos arrastados
+  processDroppedFiles(files);
+}
+
+function processDroppedFiles(files) {
+  const filesArray = Array.from(files);
+  selectedFiles = [];
+
+  for (let i = 0; i < filesArray.length; i++) {
+    const file = filesArray[i];
+    console.log(`\n📄 Arquivo ${i + 1}:`, file.name, '(', file.size, 'bytes)');
+
+    // Validar PDF
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-    showMessage('Apenas arquivos PDF são permitidos', 'error');
-    continue;
+      console.warn('⚠️ Arquivo não é PDF:', file.name);
+      showMessage('Apenas arquivos PDF são permitidos', 'error');
+      continue;
     }
 
+    // Validar tamanho
     if (file.size > 16 * 1024 * 1024) {
-    showMessage(`Arquivo ${file.name} excede 16MB`, 'error');
-    continue;
+      console.warn('⚠️ Arquivo muito grande:', file.name);
+      showMessage(`Arquivo ${file.name} excede 16MB`, 'error');
+      continue;
     }
 
     selectedFiles.push(file);
-    console.log(`✅ Arquivo adicionado: ${file.name}`);
+    console.log('✅ Arquivo válido adicionado');
+  }
+
+  console.log(`\n📋 Total de arquivos válidos: ${selectedFiles.length}`);
+  console.log('🎨 Renderizando lista...');
+  
+  renderFilesList();
+  
+  console.log('========================================\n');
 }
 
-console.log(`\n🎨 Renderizando lista com ${selectedFiles.length} arquivos`);
-renderFilesList();
+function handleFileSelection(event) {
+  console.log('\n📂 ========== ARQUIVO SELECIONADO ==========');
+  console.log('Event:', event);
+  console.log('Files:', event.target.files);
+  console.log('Total de arquivos:', event.target.files.length);
+  
+  processDroppedFiles(event.target.files);
 }
 
 function renderFilesList() {
-const filesSelected = document.getElementById('filesSelected');
-const filesList = document.getElementById('filesList');
-const filesSummary = document.getElementById('filesSummary');
-const actionButtons = document.getElementById('actionButtons');
-const processBtn = document.getElementById('processBtn');
+  console.log('🎨 Renderizando lista de arquivos...');
+  
+  const filesSelected = document.getElementById('filesSelected');
+  const filesList = document.getElementById('filesList');
+  const filesSummary = document.getElementById('filesSummary');
+  const actionButtons = document.getElementById('actionButtons');
+  const processBtn = document.getElementById('processBtn');
 
-if (selectedFiles.length === 0) {
+  if (!filesSelected || !filesList || !filesSummary || !actionButtons || !processBtn) {
+    console.error('❌ Elementos da UI não encontrados!');
+    return;
+  }
+
+  if (selectedFiles.length === 0) {
+    console.log('🔭 Nenhum arquivo selecionado - escondendo UI');
     filesSelected.style.display = 'none';
     actionButtons.style.display = 'none';
     return;
-}
+  }
 
-filesSelected.style.display = 'block';
-actionButtons.style.display = 'flex';
+  console.log('📋 Mostrando', selectedFiles.length, 'arquivo(s)');
 
-// Renderizar lista
-filesList.innerHTML = selectedFiles.map((file, index) => `
+  filesSelected.style.display = 'block';
+  actionButtons.style.display = 'flex';
+
+  // Renderizar lista
+  filesList.innerHTML = selectedFiles.map((file, index) => `
     <div class="file-item">
-    <span>📄</span>
-    <span>${file.name}</span>
-    <span style="margin-left: auto; color: #718096;">${formatFileSize(file.size)}</span>
+      <span>📄</span>
+      <span>${file.name}</span>
+      <span style="margin-left: auto; color: #718096;">${formatFileSize(file.size)}</span>
     </div>
-`).join('');
+  `).join('');
 
-// Resumo
-const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-filesSummary.textContent = `Total: ${selectedFiles.length} arquivo(s) • ${formatFileSize(totalSize)}`;
+  // Resumo
+  const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+  filesSummary.textContent = `Total: ${selectedFiles.length} arquivo(s) • ${formatFileSize(totalSize)}`;
 
-// Habilitar botão
-processBtn.disabled = false;
+  // Habilitar botão
+  processBtn.disabled = false;
 
-console.log('✅ Lista renderizada');
+  console.log('✅ Lista renderizada com sucesso');
 }
 
 async function processFiles() {
-if (selectedFiles.length === 0) {
+  console.log('\n💳 ========== INICIANDO PROCESSAMENTO ==========');
+  
+  if (selectedFiles.length === 0) {
+    console.warn('⚠️ Nenhum arquivo para processar');
     showMessage('Selecione pelo menos um arquivo PDF', 'error');
     return;
-}
+  }
 
-console.log(`\n💳 Iniciando processamento de ${selectedFiles.length} arquivo(s)`);
+  console.log(`📊 Processando ${selectedFiles.length} arquivo(s)`);
+  
+  showLoading(true, `Processando ${selectedFiles.length} extrato(s) do Itaú...`);
 
-showLoading(true, `Processando ${selectedFiles.length} extrato(s) do Itaú...`);
-
-try {
+  try {
     const formData = new FormData();
 
-    // Adicionar arquivos
+    // Adicionar arquivos ao FormData
     for (let i = 0; i < selectedFiles.length; i++) {
-    formData.append('files', selectedFiles[i]);
+      formData.append('files', selectedFiles[i]);
+      console.log(`📎 Arquivo ${i + 1} adicionado ao FormData:`, selectedFiles[i].name);
     }
 
-    console.log('📡 Enviando para API...');
-    const response = await fetch(`${API_BASE_URL}/api/itaumovimentacao/batch`, {
-    method: 'POST',
-    body: formData
+    const apiUrl = `${API_BASE_URL}/api/itaumovimentacao/batch`;
+    console.log('📡 Enviando para:', apiUrl);
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      body: formData,
+      mode: 'cors'  // ✅ IMPORTANTE: Especificar modo CORS
     });
 
-    console.log(`📊 Resposta da API: ${response.status} ${response.statusText}`);
+    console.log('📊 Resposta recebida:', response.status, response.statusText);
 
     if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Erro na API: ${response.status} - ${errorText}`);
+      const errorText = await response.text();
+      console.error('❌ Erro da API:', errorText);
+      throw new Error(`Erro ${response.status}: ${errorText}`);
     }
 
     // Download do arquivo
     const blob = await response.blob();
+    console.log('📦 Blob recebido:', blob.size, 'bytes');
+    
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
     const fileName = `movimentacao_itau_${timestamp}.xlsx`;
+
+    console.log('💾 Iniciando download:', fileName);
 
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -153,74 +285,79 @@ try {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
 
-    console.log(`✅ Download iniciado: ${fileName}`);
+    console.log('✅ Download concluído!');
     showMessage(`✅ Processamento concluído! ${selectedFiles.length} extrato(s) processado(s).`, 'success');
     
-    // Limpar após 3 segundos
     setTimeout(clearFiles, 3000);
 
-} catch (error) {
-    console.error('❌ Erro ao processar:', error);
-    showMessage(`❌ Erro ao processar: ${error.message}`, 'error');
-} finally {
+  } catch (error) {
+    console.error('❌ ERRO no processamento:', error);
+    showMessage(`❌ Erro: ${error.message}`, 'error');
+  } finally {
     showLoading(false);
-}
+    console.log('========================================\n');
+  }
 }
 
 function clearFiles() {
-selectedFiles = [];
-
-const fileInput = document.getElementById('fileInput');
-if (fileInput) {
+  console.log('🗑️ Limpando arquivos...');
+  
+  selectedFiles = [];
+  
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput) {
     fileInput.value = '';
-}
-
-renderFilesList();
-showMessage('', '');
-console.log('🗑️ Arquivos limpos');
+  }
+  
+  renderFilesList();
+  showMessage('', '');
+  
+  console.log('✅ Arquivos limpos');
 }
 
 function formatFileSize(bytes) {
-if (bytes === 0) return '0 B';
-const k = 1024;
-const sizes = ['B', 'KB', 'MB', 'GB'];
-const i = Math.floor(Math.log(bytes) / Math.log(k));
-return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function showLoading(show, text = 'Processando...') {
-const loading = document.getElementById('loadingIndicator');
-const loadingText = document.getElementById('loadingText');
-const actionButtons = document.getElementById('actionButtons');
-
-if (show) {
+  const loading = document.getElementById('loadingIndicator');
+  const loadingText = document.getElementById('loadingText');
+  const actionButtons = document.getElementById('actionButtons');
+  
+  if (show) {
     loading.style.display = 'block';
     loadingText.textContent = text;
     actionButtons.style.display = 'none';
-} else {
+  } else {
     loading.style.display = 'none';
     actionButtons.style.display = 'flex';
-}
+  }
 }
 
 function showMessage(message, type) {
-const statusMessage = document.getElementById('statusMessage');
-
-if (!message) {
+  const statusMessage = document.getElementById('statusMessage');
+  
+  if (!message) {
     statusMessage.style.display = 'none';
     return;
-}
+  }
 
-statusMessage.textContent = message;
-statusMessage.className = 'alert';
-
-if (type === 'success') {
+  statusMessage.textContent = message;
+  statusMessage.className = 'alert';
+  
+  if (type === 'success') {
     statusMessage.classList.add('alert-success');
-} else if (type === 'error') {
+  } else if (type === 'error') {
     statusMessage.classList.add('alert-error');
-} else {
+  } else {
     statusMessage.classList.add('alert-info');
+  }
+  
+  statusMessage.style.display = 'block';
 }
 
-statusMessage.style.display = 'block';
-}
+console.log('✅ Script itau-movimentacao.js carregado completamente');

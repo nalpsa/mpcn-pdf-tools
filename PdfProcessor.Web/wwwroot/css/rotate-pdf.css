@@ -1,264 +1,377 @@
 .page-container {
-max-width: 1400px;
-margin: 0 auto;
-padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 .page-header {
-text-align: center;
-margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.header-icon {
+  font-size: 3rem;
 }
 
 .page-header h1 {
-font-size: 2.5rem;
-font-weight: 700;
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-margin-bottom: 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+}
+
+.subtitle {
+  color: #718096;
+  margin: 0;
 }
 
 .content-card {
-background: white;
-border-radius: 12px;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.info-box {
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.info-box.info {
+  background: #ebf8ff;
+  border-left: 4px solid #3182ce;
+}
+
+.info-icon {
+  font-size: 1.5rem;
 }
 
 .upload-section {
-text-align: center;
-margin-bottom: 2rem;
+  margin-bottom: 2rem;
 }
 
-.upload-button-container {
-margin: 2rem 0;
+.upload-area {
+  border: 3px dashed #cbd5e0;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.btn-upload-label {
-display: inline-block;
-padding: 1rem 2rem;
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-color: white;
-font-size: 1.2rem;
-font-weight: 600;
-border-radius: 8px;
-cursor: pointer;
-transition: all 0.3s ease;
-border: none;
-box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+.upload-area:hover {
+  border-color: #667eea;
+  background: #f7fafc;
 }
 
-.btn-upload-label:hover {
-transform: translateY(-2px);
-box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+/* ✅ Estilo para drag over */
+.upload-area.drag-over {
+  border-color: #667eea;
+  background: #f7fafc;
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: #cbd5e0;
+  margin-bottom: 1rem;
+}
+
+.upload-area:hover .upload-icon {
+  color: #667eea;
+}
+
+.upload-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
 }
 
 .upload-hint {
-color: #666;
-font-size: 0.9rem;
-margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #718096;
 }
 
-/* ✅ NOVO: Botões centralizados */
-.action-buttons-container {
-display: flex;
-justify-content: center;
-align-items: center;
-gap: 0.75rem;
-flex-wrap: wrap;
-margin-bottom: 1rem;
+.hidden-file-input {
+  display: none;
 }
 
-/* ✅ NOVO: Contador centralizado */
 .file-counter {
-text-align: center;
-font-size: 1.1rem;
-color: #333;
-padding: 1rem;
-background: #f8f9fa;
-border-radius: 8px;
-margin-bottom: 1.5rem;
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 8px;
+  margin: 2rem auto;
+  max-width: 400px;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.counter-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+#counterText {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.preview-section {
+  margin-top: 2rem;
+}
+
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
 }
 
 .btn {
-padding: 0.6rem 1.2rem;
-border: none;
-border-radius: 6px;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.3s ease;
-font-size: 0.95rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
 }
 
 .btn-primary {
-background: #007bff;
-color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
 .btn-primary:hover {
-background: #0056b3;
-transform: translateY(-2px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .btn-secondary {
-background: #6c757d;
-color: white;
+  background: #e2e8f0;
+  color: #2d3748;
 }
 
 .btn-secondary:hover {
-background: #545b62;
-transform: translateY(-2px);
+  background: #cbd5e0;
+  transform: translateY(-2px);
 }
 
 .btn-success {
-background: #28a745;
-color: white;
+  background: #48bb78;
+  color: white;
 }
 
 .btn-success:hover {
-background: #218838;
-transform: translateY(-2px);
+  background: #38a169;
+  transform: translateY(-2px);
 }
 
 .btn-danger {
-background: #dc3545;
-color: white;
+  background: #f56565;
+  color: white;
 }
 
 .btn-danger:hover {
-background: #c82333;
-transform: translateY(-2px);
+  background: #e53e3e;
+  transform: translateY(-2px);
 }
 
 .pdf-grid {
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-gap: 1.5rem;
-margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .pdf-card {
-background: white;
-border: 3px solid #e0e0e0;
-border-radius: 12px;
-padding: 1rem;
-cursor: pointer;
-transition: all 0.3s ease;
-position: relative;
-min-height: 280px;
-/* ✅ AJUSTE: Altura mínima para acomodar checkbox */
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .pdf-card:hover {
-transform: translateY(-4px);
-box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .pdf-card.selected {
-border-color: #764ba2;
-background: #f8f5ff;
-box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
+  border-color: #667eea;
+  background: #f7fafc;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
-/* ✅ AJUSTE: Checkbox mais visível e acima da miniatura */
 .pdf-checkbox {
-position: absolute;
-top: 0.75rem;
-left: 0.75rem;
-z-index: 10;
-background: white;
-border-radius: 4px;
-padding: 2px;
-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
 }
 
 .pdf-checkbox input[type="checkbox"] {
-width: 22px;
-height: 22px;
-cursor: pointer;
-accent-color: #764ba2;
-/* Cor roxa quando marcado */
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
 
 .pdf-thumbnail {
-width: 100%;
-height: 180px;
-display: flex;
-align-items: center;
-justify-content: center;
-background: #f5f5f5;
-border-radius: 8px;
-margin-bottom: 1rem;
-overflow: hidden;
-position: relative;
-margin-top: 0.5rem;
-/* ✅ AJUSTE: Espaço para o checkbox */
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7fafc;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
 }
 
 .pdf-thumbnail img {
-max-width: 100%;
-max-height: 100%;
-object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
 .pdf-icon {
-font-size: 4rem;
-transition: transform 0.5s ease;
+  font-size: 4rem;
+  color: #cbd5e0;
+  transition: transform 0.3s ease;
 }
 
 .pdf-info {
-text-align: center;
+  text-align: center;
 }
 
 .pdf-name {
-font-weight: 600;
-color: #333;
-margin-bottom: 0.5rem;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pdf-size {
-color: #666;
-font-size: 0.85rem;
+  font-size: 0.8rem;
+  color: #718096;
 }
 
 .rotation-badge {
-display: inline-block;
-background: #764ba2;
-color: white;
-padding: 0.25rem 0.75rem;
-border-radius: 12px;
-font-size: 0.85rem;
-margin-top: 0.5rem;
-font-weight: 600;
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
-.message-area {
-margin-top: 1rem;
-padding: 1rem;
-border-radius: 8px;
-display: none;
+.loading {
+  text-align: center;
+  padding: 2rem;
 }
 
-.message-area.success {
-background: #d4edda;
-color: #155724;
-border: 1px solid #c3e6cb;
-display: block;
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
 }
 
-.message-area.error {
-background: #f8d7da;
-color: #721c24;
-border: 1px solid #f5c6cb;
-display: block;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.message-area.info {
-background: #d1ecf1;
-color: #0c5460;
-border: 1px solid #bee5eb;
-display: block;
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.alert-success {
+  background: #c6f6d5;
+  color: #22543d;
+  border-left: 4px solid #38a169;
+}
+
+.alert-error {
+  background: #fed7d7;
+  color: #742a2a;
+  border-left: 4px solid #e53e3e;
+}
+
+.alert-info {
+  background: #bee3f8;
+  color: #2c5282;
+  border-left: 4px solid #3182ce;
+}
+
+.feature-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.feature-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-box h4 {
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+}
+
+.feature-box p {
+  color: #718096;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .action-buttons-container {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .pdf-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
 }

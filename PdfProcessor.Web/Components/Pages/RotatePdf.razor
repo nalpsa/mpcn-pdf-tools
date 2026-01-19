@@ -1,35 +1,50 @@
 @page "/rotate-pdf"
 @page "/rotacionar"
-@inject IJSRuntime JS
-@inject HttpClient Http
 
 <PageTitle>Rotacionar PDF - PDF Processor</PageTitle>
 
 <div class="page-container">
   <div class="page-header">
-    <h1>🔄 Rotacionar PDF</h1>
-    <p>Rotacione páginas de PDFs com preview em tempo real</p>
+    <div class="header-icon">🔄</div>
+    <div>
+      <h1>Rotacionar PDF</h1>
+      <p class="subtitle">Rotacione páginas de PDFs com preview em tempo real</p>
+    </div>
   </div>
 
   <div class="content-card">
-    <!-- Upload Section -->
-    <div class="upload-section">
-      <h3>📁 Selecionar Arquivos</h3>
-
-      <div class="upload-button-container">
-        <label for="fileInput" class="btn-upload-label">
-          📄 Selecionar PDFs
-        </label>
-        <p class="upload-hint">Múltiplos arquivos PDF (máx. 16MB cada)</p>
+    <div class="info-box info">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <strong>Como funciona:</strong>
+        <ul>
+          <li>Selecione múltiplos arquivos PDF</li>
+          <li>Visualize miniaturas da primeira página de cada PDF</li>
+          <li>Selecione os PDFs que deseja rotacionar</li>
+          <li>Clique nos botões de rotação (90° esquerda/direita)</li>
+          <li>Baixe todos os PDFs rotacionados em um arquivo ZIP</li>
+        </ul>
       </div>
+    </div>
 
-      <!-- Input File (escondido mas funcional) -->
-      <input type="file" id="fileInput" multiple accept=".pdf" style="display: none;" />
+    <div class="upload-section">
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Clique aqui ou arraste os PDFs</div>
+        <div class="upload-hint">Selecione múltiplos PDFs para rotacionar (máx. 16MB cada)</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
+    </div>
+
+    <!-- Contador de arquivos -->
+    <div id="fileCounter" class="file-counter" style="display: none;">
+      <span class="counter-icon">📋</span>
+      <span id="counterText">Arquivos carregados: 0</span>
     </div>
 
     <!-- Preview Section -->
     <div id="previewSection" class="preview-section" style="display: none;">
-      <!-- Action Buttons (centralizados) -->
+      <!-- Action Buttons -->
       <div class="action-buttons-container">
         <button id="selectAllBtn" onclick="toggleSelectAll()" class="btn btn-primary">
           <span id="selectAllText">✓ Selecionar Todos</span>
@@ -40,6 +55,9 @@
         <button onclick="rotateSelected(90)" class="btn btn-secondary">
           ↷ Direita (90°)
         </button>
+        <button onclick="rotateSelected(180)" class="btn btn-secondary">
+          ⟳ 180°
+        </button>
         <button onclick="processDownload()" class="btn btn-success">
           ⬇ Download ZIP
         </button>
@@ -48,17 +66,36 @@
         </button>
       </div>
 
-      <!-- File Counter (centralizado abaixo dos botões) -->
-      <div class="file-counter">
-        📋 Arquivos Carregados: <strong id="fileCount">0</strong>
-      </div>
-
       <!-- PDF Grid -->
       <div id="pdfGrid" class="pdf-grid"></div>
     </div>
 
+    <!-- Loading -->
+    <div id="loadingIndicator" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p id="loadingText">Processando PDFs...</p>
+    </div>
+
     <!-- Message Area -->
-    <div id="messageArea" class="message-area"></div>
+    <div id="statusMessage" class="alert" style="display: none;"></div>
+  </div>
+
+  <div class="feature-boxes">
+    <div class="feature-box">
+      <div class="feature-icon">👁️</div>
+      <h4>Preview Visual</h4>
+      <p>Veja miniaturas antes de rotacionar</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">🔄</div>
+      <h4>Rotação Flexível</h4>
+      <p>90° esquerda, direita ou 180°</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">📦</div>
+      <h4>Download em ZIP</h4>
+      <p>Todos os PDFs em um único arquivo</p>
+    </div>
   </div>
 </div>
 
@@ -67,4 +104,3 @@
 
 <!-- Carregar JavaScript externo -->
 <script src="/js/rotate-pdf.js"></script>
-

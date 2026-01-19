@@ -1,47 +1,179 @@
 console.log('🟢 Itaú Cash - Script carregado');
 
-// Configuração da API
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5239' 
-  : 'http://10.0.0.50:5239';
+// ✅ CONFIGURAÇÃO DINÂMICA DA API
+function getApiBaseUrl() {
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  
+  console.log('🔍 Detectando configuração de rede...');
+  console.log('  Hostname:', hostname);
+  console.log('  Port:', port);
+  
+  // Se está em localhost, API também está em localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    console.log('✅ Modo: LOCALHOST');
+    return 'http://localhost:5239';
+  }
+  
+  // Se está acessando por IP, a API está no mesmo IP
+  // Exemplo: 
+  //   Frontend: http://192.168.1.100:5087
+  //   API:      http://192.168.1.100:5239
+  if (hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+    const apiUrl = `http://${hostname}:5239`;
+    console.log('✅ Modo: REDE LOCAL (IP detectado)');
+    console.log('  API URL:', apiUrl);
+    return apiUrl;
+  }
+  
+  // Fallback para localhost
+  console.log('⚠️ Modo: FALLBACK para localhost');
+  return 'http://localhost:5239';
+}
 
+const API_BASE_URL = getApiBaseUrl();
 console.log('🔧 API Base URL:', API_BASE_URL);
 
 // Estado global
 let selectedFiles = [];
 
-// IMPORTANTE: Usar window.addEventListener para garantir que funciona
-window.addEventListener('load', function() {
-  console.log('🔧 Página carregada - Iniciando configuração...');
+// ✅ CORRIGIDO: Usar DOMContentLoaded ao invés de load
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔧 DOM carregado - Iniciando configuração...');
   setupFileInput();
+  setupDragAndDrop();
 });
 
+// ✅ FUNÇÃO ROBUSTA: Configurar file input
 function setupFileInput() {
-  console.log('🔧 Tentando configurar file input...');
+  console.log('🔧 Configurando file input...');
   
   const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
   
   if (!fileInput) {
     console.error('❌ ERRO: Elemento #fileInput não encontrado!');
-    console.log('🔍 Elementos disponíveis:', document.querySelectorAll('input[type="file"]'));
-    
-    // Tentar novamente após 500ms
-    setTimeout(setupFileInput, 500);
+    // Tentar novamente após 200ms
+    setTimeout(setupFileInput, 200);
     return;
   }
   
-  console.log('✅ Elemento #fileInput encontrado:', fileInput);
+  if (!uploadArea) {
+    console.error('❌ ERRO: Elemento #uploadArea não encontrado!');
+    return;
+  }
   
-  // Remover event listeners antigos (se existirem)
-  fileInput.removeEventListener('change', handleFileSelection);
+  console.log('✅ Elementos encontrados:', { fileInput, uploadArea });
   
-  // Adicionar event listener
-  fileInput.addEventListener('change', handleFileSelection);
+  // ✅ IMPORTANTE: Remover event listeners antigos
+  const newFileInput = fileInput.cloneNode(true);
+  fileInput.parentNode.replaceChild(newFileInput, fileInput);
   
-  console.log('✅ Event listener configurado com sucesso');
+  // ✅ Adicionar event listener ao novo elemento
+  newFileInput.addEventListener('change', handleFileSelection);
   
-  // Testar se está funcionando
-  console.log('🧪 Teste: clique no botão de upload para verificar');
+  // ✅ CORRIGIR: Click na área de upload
+  uploadArea.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🖱️ Upload area clicada');
+    newFileInput.click();
+  };
+  
+  console.log('✅ File input configurado com sucesso');
+}
+
+// ✅ NOVO: Configurar Drag & Drop
+function setupDragAndDrop() {
+  console.log('🔧 Configurando Drag & Drop...');
+  
+  const uploadArea = document.getElementById('uploadArea');
+  
+  if (!uploadArea) {
+    console.error('❌ ERRO: Elemento #uploadArea não encontrado!');
+    setTimeout(setupDragAndDrop, 200);
+    return;
+  }
+  
+  // ✅ Prevenir comportamento padrão (abrir PDF em nova aba)
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+  });
+  
+  // ✅ Destacar área ao arrastar
+  ['dragenter', 'dragover'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, highlight, false);
+  });
+  
+  ['dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, unhighlight, false);
+  });
+  
+  // ✅ Lidar com drop
+  uploadArea.addEventListener('drop', handleDrop, false);
+  
+  console.log('✅ Drag & Drop configurado com sucesso');
+}
+
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+function highlight(e) {
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.classList.add('drag-over');
+}
+
+function unhighlight(e) {
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  console.log('\n📂 ========== ARQUIVOS ARRASTADOS ==========');
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  
+  console.log('Files:', files);
+  console.log('Total de arquivos:', files.length);
+  
+  // ✅ Processar arquivos arrastados
+  processDroppedFiles(files);
+}
+
+function processDroppedFiles(files) {
+  selectedFiles = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    console.log(`\n📄 Arquivo ${i + 1}:`, file.name, '(', file.size, 'bytes)');
+
+    // Validar PDF
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      console.warn('⚠️ Arquivo não é PDF:', file.name);
+      showMessage('Apenas arquivos PDF são permitidos', 'error');
+      continue;
+    }
+
+    // Validar tamanho
+    if (file.size > 16 * 1024 * 1024) {
+      console.warn('⚠️ Arquivo muito grande:', file.name);
+      showMessage(`Arquivo ${file.name} excede 16MB`, 'error');
+      continue;
+    }
+
+    selectedFiles.push(file);
+    console.log('✅ Arquivo válido adicionado');
+  }
+
+  console.log(`\n📋 Total de arquivos válidos: ${selectedFiles.length}`);
+  console.log('🎨 Renderizando lista...');
+  
+  renderFilesList();
+  
+  console.log('========================================\n');
 }
 
 function handleFileSelection(event) {
@@ -98,7 +230,7 @@ function renderFilesList() {
   }
 
   if (selectedFiles.length === 0) {
-    console.log('📭 Nenhum arquivo selecionado - escondendo UI');
+    console.log('🔭 Nenhum arquivo selecionado - escondendo UI');
     filesSelected.style.display = 'none';
     actionButtons.style.display = 'none';
     return;
@@ -155,7 +287,8 @@ async function processFiles() {
 
     const response = await fetch(apiUrl, {
       method: 'POST',
-      body: formData
+      body: formData,
+      mode: 'cors'  // ✅ IMPORTANTE: Especificar modo CORS
     });
 
     console.log('📊 Resposta recebida:', response.status, response.statusText);

@@ -1,6 +1,5 @@
 @page "/compress-pdf"
 @page "/comprimir"
-@inject IJSRuntime JS
 
 <PageTitle>Comprimir PDF - PDF Processor</PageTitle>
 
@@ -22,18 +21,18 @@
           <li>Selecione um ou múltiplos arquivos PDF</li>
           <li>Escolha o nível de compressão para cada arquivo</li>
           <li>Opcionalmente, remova imagens para maior compressão</li>
-          <li>Baixe os arquivos comprimidos</li>
+          <li>Baixe os arquivos comprimidos individualmente ou em ZIP</li>
         </ul>
       </div>
     </div>
 
     <div class="upload-section">
-      <div class="button-group">
-        <label for="fileInput" class="btn btn-primary">
-          📄 Selecionar PDFs
-        </label>
-        <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Clique aqui ou arraste os PDFs</div>
+        <div class="upload-hint">Selecione múltiplos PDFs para comprimir (máx. 16MB cada)</div>
       </div>
+      <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
     </div>
 
     <!-- Contador de arquivos -->
@@ -97,7 +96,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- style -->
 <link rel="stylesheet" href="css/compress-pdf.css" />

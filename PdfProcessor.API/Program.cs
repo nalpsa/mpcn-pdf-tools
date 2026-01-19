@@ -18,18 +18,45 @@ builder.Services.AddScoped<IPdfMergeService, PdfMergeService>();
 builder.Services.AddScoped<IItauMovimentacaoParser, ItauMovimentacaoParser>();
 builder.Services.AddScoped<IItauCashParser, ItauCashParser>();
 
-// ✅ CORS ATUALIZADO: Aceita localhost E IP da rede
+// ✅ CORS DINÂMICO: Aceita qualquer rede local + localhost
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor", policy =>
     {
-        policy.WithOrigins(
-                "https://localhost:5087",
-                "http://localhost:5087",
-                "http://10.0.0.50:5087",     // ← Acesso pela rede
-                "http://10.0.0.50:5239")     // ← API pela rede
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.SetIsOriginAllowed(origin =>
+        {
+            // Parse a URL
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            {
+                var host = uri.Host;
+                
+                // ✅ Permitir localhost
+                if (host == "localhost" || host == "127.0.0.1")
+                    return true;
+                
+                // ✅ Permitir IPs de rede local (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+                if (System.Net.IPAddress.TryParse(host, out var ip))
+                {
+                    var bytes = ip.GetAddressBytes();
+                    
+                    // Rede Classe A: 10.0.0.0/8
+                    if (bytes[0] == 10)
+                        return true;
+                    
+                    // Rede Classe B: 172.16.0.0/12
+                    if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                        return true;
+                    
+                    // Rede Classe C: 192.168.0.0/16
+                    if (bytes[0] == 192 && bytes[1] == 168)
+                        return true;
+                }
+            }
+            
+            return false;
+        })
+        .AllowAnyMethod()
+        .AllowAnyHeader();
     });
 });
 
@@ -45,7 +72,7 @@ if (app.Environment.IsDevelopment())
 // Comentado para aceitar HTTP
 // app.UseHttpsRedirection();
 
-// Habilitar CORS
+// ✅ IMPORTANTE: CORS deve vir ANTES de MapControllers
 app.UseCors("AllowBlazor");
 
 // Mapear controllers

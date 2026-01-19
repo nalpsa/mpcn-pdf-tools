@@ -98,6 +98,14 @@ border-color: #3182ce;
 background: #ebf8ff;
 }
 
+/* ✅ NOVO: Estilo para drag over */
+.upload-area.drag-over {
+border-color: #3182ce;
+background: #ebf8ff;
+transform: scale(1.02);
+box-shadow: 0 8px 24px rgba(49, 130, 206, 0.2);
+}
+
 .upload-icon {
 font-size: 3rem;
 color: #cbd5e0;
