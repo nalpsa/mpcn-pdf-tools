@@ -8,6 +8,37 @@ namespace PdfProcessor.Infrastructure.Parsers;
 
 public class BtgParser : IBtgParser
 {
+    // ✅ POSIÇÕES CORRETAS (ajustadas manualmente)
+    private class ColumnRanges
+    {
+        public float ProcessDateStart = 30;
+        public float ProcessDateEnd = 74;
+        
+        public float TradeDateStart = 74;
+        public float TradeDateEnd = 112;
+        
+        public float ActivityStart = 112;
+        public float ActivityEnd = 252;
+        
+        public float DescriptionStart = 252;
+        public float DescriptionEnd = 400;
+        
+        public float QuantityStart = 400;
+        public float QuantityEnd = 465;
+        
+        public float PriceStart = 465;
+        public float PriceEnd = 533;
+        
+        public float AccruedStart = 534;
+        public float AccruedEnd = 640;
+        
+        public float AmountStart = 640;
+        public float AmountEnd = 701;
+        
+        public float CurrencyStart = 701;
+        public float CurrencyEnd = 800;
+    }
+
     public async Task<List<BtgTransaction>> ParsePdfAsync(Stream pdfStream, string fileName)
     {
         var transactions = new List<BtgTransaction>();
@@ -16,32 +47,25 @@ public class BtgParser : IBtgParser
         {
             try
             {
-                Console.WriteLine($"📄 Processando {fileName} usando iTextSharp");
+                Console.WriteLine($"📄 Processando {fileName}");
                 
                 pdfStream.Position = 0;
-                
-                // ✅ iTextSharp 5.x suporta RC4 40-bit!
                 using var pdfReader = new PdfReader(pdfStream);
                 
                 int totalPages = pdfReader.NumberOfPages;
-                Console.WriteLine($"📄 {totalPages} página(s)");
 
                 for (int pageNum = 1; pageNum <= totalPages; pageNum++)
                 {
-                    // iTextSharp usa índice 1-based
                     var text = PdfTextExtractor.GetTextFromPage(pdfReader, pageNum);
-
-                    Console.WriteLine($"\n📄 === PÁGINA {pageNum} ===");
-                    Console.WriteLine($"📝 {text.Length} caracteres");
 
                     if (!text.Contains("Transactions in Date Sequence"))
                     {
-                        Console.WriteLine("⏭️ Página não contém tabela de transações");
                         continue;
                     }
 
-                    var cleanedText = RemoveFooter(text);
-                    var pageTransactions = ExtractTransactionsFromPage(cleanedText, pageNum);
+                    Console.WriteLine($"\n📄 === PÁGINA {pageNum} ===");
+                    
+                    var pageTransactions = ExtractTransactionsWithPosition(pdfReader, pageNum);
                     transactions.AddRange(pageTransactions);
 
                     Console.WriteLine($"✅ {pageTransactions.Count} transação(ões) extraída(s)");
@@ -59,87 +83,106 @@ public class BtgParser : IBtgParser
         });
     }
 
-    private string RemoveFooter(string pageText)
-    {
-        var pageMatch = Regex.Match(pageText, @"Page\s+\d+\s+of\s+\d+", RegexOptions.IgnoreCase);
-        if (pageMatch.Success)
-        {
-            pageText = pageText.Substring(0, pageMatch.Index);
-            Console.WriteLine("🗑️ Rodapé removido");
-        }
-        return pageText;
-    }
-
-    private List<BtgTransaction> ExtractTransactionsFromPage(string pageText, int pageNum)
+    private List<BtgTransaction> ExtractTransactionsWithPosition(PdfReader reader, int pageNum)
     {
         var transactions = new List<BtgTransaction>();
+        var columns = new ColumnRanges();
 
         try
         {
-            var startMatch = Regex.Match(pageText, @"Transactions in Date Sequence(?:\s*\(continued\))?", RegexOptions.IgnoreCase);
-            if (!startMatch.Success)
-            {
-                Console.WriteLine("⚠️ Início da tabela não encontrado");
-                return transactions;
-            }
-
-            var endMatch = Regex.Match(pageText, @"Total Value of Transactions", RegexOptions.IgnoreCase);
+            var strategy = new LocationTextExtractionStrategyEx();
+            var pageText = PdfTextExtractor.GetTextFromPage(reader, pageNum, strategy);
             
-            int startIndex = startMatch.Index + startMatch.Length;
-            int endIndex = endMatch.Success ? endMatch.Index : pageText.Length;
+            var chunks = strategy.GetTextChunks();
 
-            string tableContent = pageText.Substring(startIndex, endIndex - startIndex);
+            // Agrupar por linha (Y)
+            var lineGroups = chunks
+                .GroupBy(c => Math.Round(c.Y, 1))
+                .OrderByDescending(g => g.Key)
+                .ToList();
 
-            // Remover cabeçalho
-            tableContent = Regex.Replace(tableContent, 
-                @"Process/\s*Settlement\s*Date\s*Trade/\s*Transaction\s*Date\s*Activity Type\s*Description\s*Quantity\s*Price\s*Accrued Interest\s*Amount\s*Currency", 
-                "", 
-                RegexOptions.IgnoreCase);
+            bool inTableSection = false;
+            BtgTransaction? currentTransaction = null;
 
-            var lines = tableContent.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                                   .Select(l => l.Trim())
-                                   .Where(l => !string.IsNullOrWhiteSpace(l))
-                                   .ToList();
-
-            Console.WriteLine($"📋 {lines.Count} linhas para processar");
-
-            // ✅ AGRUPAR LINHAS MULTILINHAS
-            var groupedLines = new List<string>();
-            
-            for (int i = 0; i < lines.Count; i++)
+            foreach (var lineGroup in lineGroups)
             {
-                var line = lines[i];
-                
-                // Se linha começa com data, é início de nova transação
-                if (Regex.IsMatch(line, @"^\d{2}/\d{2}/\d{2}"))
+                var lineChunks = lineGroup.OrderBy(c => c.X).ToList();
+                var lineText = string.Join("", lineChunks.Select(c => c.Text));
+
+                // Detectar início
+                if (lineText.Contains("Transactions in Date Sequence"))
                 {
-                    var fullLine = line;
-                    
-                    // Juntar linhas seguintes que NÃO começam com data
-                    int j = i + 1;
-                    while (j < lines.Count && !Regex.IsMatch(lines[j], @"^\d{2}/\d{2}/\d{2}"))
+                    inTableSection = true;
+                    continue;
+                }
+
+                // Detectar fim
+                if (lineText.Contains("Total Value of Transactions"))
+                {
+                    break;
+                }
+
+                // Pular cabeçalhos
+                if (lineText.Contains("Process") && lineText.Contains("Activity Type"))
+                {
+                    continue;
+                }
+
+                if (!inTableSection)
+                {
+                    continue;
+                }
+
+                // ✅ VERIFICAR SE É NOVA TRANSAÇÃO OU CONTINUAÇÃO
+                var processDate = GetTextInRange(lineChunks, columns.ProcessDateStart, columns.ProcessDateEnd);
+                
+                // Se tem data = NOVA transação
+                if (!string.IsNullOrWhiteSpace(processDate) && Regex.IsMatch(processDate, @"\d{2}/\d{2}/\d{2}"))
+                {
+                    // Salvar transação anterior se existir
+                    if (currentTransaction != null)
                     {
-                        fullLine += " " + lines[j];
-                        j++;
+                        transactions.Add(currentTransaction);
                     }
                     
-                    groupedLines.Add(fullLine);
+                    // Criar nova transação
+                    currentTransaction = new BtgTransaction();
+                    currentTransaction.ProcessSettlementDate = processDate;
+                    currentTransaction.TradeTransactionDate = GetTextInRange(lineChunks, columns.TradeDateStart, columns.TradeDateEnd);
+                    currentTransaction.ActivityType = GetTextInRange(lineChunks, columns.ActivityStart, columns.ActivityEnd);
+                    currentTransaction.Description = GetTextInRange(lineChunks, columns.DescriptionStart, columns.DescriptionEnd);
+                    currentTransaction.Quantity = GetTextInRange(lineChunks, columns.QuantityStart, columns.QuantityEnd);
+                    currentTransaction.Price = GetTextInRange(lineChunks, columns.PriceStart, columns.PriceEnd);
+                    currentTransaction.AccruedInterest = GetTextInRange(lineChunks, columns.AccruedStart, columns.AccruedEnd);
+                    currentTransaction.Amount = GetTextInRange(lineChunks, columns.AmountStart, columns.AmountEnd);
+                    currentTransaction.Currency = GetTextInRange(lineChunks, columns.CurrencyStart, columns.CurrencyEnd);
                     
-                    // Pular linhas já processadas
-                    i = j - 1;
+                    Console.WriteLine($"   ✓ Nova: {currentTransaction.ProcessSettlementDate} | {currentTransaction.ActivityType}");
+                }
+                // Se NÃO tem data = CONTINUAÇÃO da anterior
+                else if (currentTransaction != null)
+                {
+                    var activityContinuation = GetTextInRange(lineChunks, columns.ActivityStart, columns.ActivityEnd);
+                    var descriptionContinuation = GetTextInRange(lineChunks, columns.DescriptionStart, columns.DescriptionEnd);
+                    
+                    if (!string.IsNullOrWhiteSpace(activityContinuation))
+                    {
+                        currentTransaction.ActivityType += " " + activityContinuation;
+                        Console.WriteLine($"     + Activity: {activityContinuation}");
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(descriptionContinuation))
+                    {
+                        currentTransaction.Description += " " + descriptionContinuation;
+                        Console.WriteLine($"     + Description: {descriptionContinuation}");
+                    }
                 }
             }
-
-            Console.WriteLine($"📦 {groupedLines.Count} transação(ões) agrupadas");
-
-            // Processar cada transação agrupada
-            foreach (var groupedLine in groupedLines)
+            
+            // ✅ Adicionar última transação
+            if (currentTransaction != null)
             {
-                var transaction = ParseTransactionLine(groupedLine);
-                if (transaction != null)
-                {
-                    transactions.Add(transaction);
-                }
+                transactions.Add(currentTransaction);
             }
         }
         catch (Exception ex)
@@ -150,91 +193,49 @@ public class BtgParser : IBtgParser
         return transactions;
     }
 
-    private BtgTransaction? ParseTransactionLine(string line)
+    private string GetTextInRange(List<TextChunkEx> chunks, float startX, float endX)
     {
-        try
-        {
-            var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 4)
-            {
-                return null;
-            }
+        var textsInRange = chunks
+            .Where(c => c.X >= startX && c.X < endX)
+            .OrderBy(c => c.X)
+            .Select(c => c.Text)
+            .ToList();
 
-            var transaction = new BtgTransaction();
-            transaction.ProcessSettlementDate = parts[0];
-
-            int currentIndex = 1;
-
-            if (currentIndex < parts.Length && Regex.IsMatch(parts[currentIndex], @"^\d{2}/\d{2}/\d{2}"))
-            {
-                transaction.TradeTransactionDate = parts[currentIndex];
-                currentIndex++;
-            }
-
-            var activityParts = new List<string>();
-            while (currentIndex < parts.Length && 
-                   parts[currentIndex].All(c => char.IsUpper(c) || char.IsWhiteSpace(c) || c == '/') &&
-                   !Regex.IsMatch(parts[currentIndex], @"^-?\d"))
-            {
-                activityParts.Add(parts[currentIndex]);
-                currentIndex++;
-                if (activityParts.Count >= 4) break;
-            }
-            transaction.ActivityType = string.Join(" ", activityParts);
-
-            var descriptionParts = new List<string>();
-            while (currentIndex < parts.Length &&
-                   !IsNumeric(parts[currentIndex]) &&
-                   parts[currentIndex] != "USD" &&
-                   parts[currentIndex] != "BRL")
-            {
-                descriptionParts.Add(parts[currentIndex]);
-                currentIndex++;
-            }
-            transaction.Description = string.Join(" ", descriptionParts);
-
-            var remainingParts = parts.Skip(currentIndex).ToList();
-
-            if (remainingParts.Count > 0 && Regex.IsMatch(remainingParts[^1], @"^[A-Z]{3}$"))
-            {
-                transaction.Currency = remainingParts[^1];
-                remainingParts.RemoveAt(remainingParts.Count - 1);
-            }
-
-            if (remainingParts.Count > 0 && IsNumeric(remainingParts[^1]))
-            {
-                transaction.Amount = remainingParts[^1];
-                remainingParts.RemoveAt(remainingParts.Count - 1);
-            }
-
-            if (remainingParts.Count > 0 && IsNumeric(remainingParts[^1]))
-            {
-                transaction.AccruedInterest = remainingParts[^1];
-                remainingParts.RemoveAt(remainingParts.Count - 1);
-            }
-
-            if (remainingParts.Count > 0 && IsNumeric(remainingParts[^1]))
-            {
-                transaction.Price = remainingParts[^1];
-                remainingParts.RemoveAt(remainingParts.Count - 1);
-            }
-
-            if (remainingParts.Count > 0 && IsNumeric(remainingParts[^1]))
-            {
-                transaction.Quantity = remainingParts[^1];
-            }
-
-            return transaction;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️ Erro ao parsear linha: {ex.Message}");
-            return null;
-        }
+        return string.Join(" ", textsInRange).Trim();
     }
 
-    private bool IsNumeric(string value)
+    private class TextChunkEx
     {
-        return Regex.IsMatch(value, @"^-?\d[\d,\.]*$");
+        public string Text { get; set; } = "";
+        public float X { get; set; }
+        public float Y { get; set; }
+    }
+
+    private class LocationTextExtractionStrategyEx : LocationTextExtractionStrategy
+    {
+        private List<TextChunkEx> chunks = new List<TextChunkEx>();
+
+        public override void RenderText(TextRenderInfo renderInfo)
+        {
+            base.RenderText(renderInfo);
+
+            var bottomLeft = renderInfo.GetBaseline().GetStartPoint();
+            var text = renderInfo.GetText();
+
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                chunks.Add(new TextChunkEx
+                {
+                    Text = text,
+                    X = bottomLeft[iTextSharp.text.pdf.parser.Vector.I1],
+                    Y = bottomLeft[iTextSharp.text.pdf.parser.Vector.I2]
+                });
+            }
+        }
+
+        public List<TextChunkEx> GetTextChunks()
+        {
+            return chunks;
+        }
     }
 }
