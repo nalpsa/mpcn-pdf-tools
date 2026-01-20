@@ -1,0 +1,101 @@
+@page "/btg-pactual"
+@page "/btg"
+
+<PageTitle>BTG Pactual - Transactions - PDF Processor</PageTitle>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-icon">🏦</div>
+    <div>
+      <h1>BTG Pactual - Transactions</h1>
+      <p class="subtitle">Extração automática de transações do BTG Pactual</p>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="info-box info">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <strong>Como funciona:</strong>
+        <ul>
+          <li>Selecione um ou múltiplos PDFs de extrato BTG Pactual</li>
+          <li>O sistema identifica automaticamente a tabela "Transactions in Date Sequence"</li>
+          <li>Extrai todas as colunas: Data, Activity Type, Description, Quantity, Price, Amount, etc</li>
+          <li>Gera um arquivo Excel consolidado com todas as transações</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-box warning">
+      <div class="info-icon">⚠️</div>
+      <div>
+        <strong>Estrutura do PDF:</strong>
+        <ul style="margin: 0.5rem 0 0 0;">
+          <li>Início da tabela: <code>"Transactions in Date Sequence"</code></li>
+          <li>Continuação: <code>"Transactions in Date Sequence (continued)"</code></li>
+          <li>Fim da tabela: <code>"Total Value of Transactions"</code></li>
+          <li>Rodapé ignorado após: <code>"Page N of N"</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Clique aqui ou arraste os PDFs</div>
+        <div class="upload-hint">Selecione múltiplos PDFs do BTG Pactual (máx. 16MB cada)</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
+    </div>
+
+    <!-- Lista de arquivos selecionados -->
+    <div id="filesSelected" class="files-selected" style="display: none;">
+      <div class="files-header">📋 Arquivos Selecionados:</div>
+      <div id="filesList" class="files-list"></div>
+      <div id="filesSummary" class="files-summary"></div>
+    </div>
+
+    <!-- Botões de ação -->
+    <div id="actionButtons" class="action-section" style="display: none;">
+      <button class="btn btn-primary" id="processBtn" onclick="processFiles()" disabled>
+        🏦 Processar e Gerar Excel
+      </button>
+      <button class="btn btn-secondary" onclick="clearFiles()">
+        🗑️ Limpar
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingIndicator" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p id="loadingText">Processando extratos do BTG Pactual...</p>
+    </div>
+
+    <!-- Mensagem de status -->
+    <div id="statusMessage" class="alert" style="display: none;"></div>
+  </div>
+
+  <div class="feature-boxes">
+    <div class="feature-box">
+      <div class="feature-icon">📊</div>
+      <h4>Extração Completa</h4>
+      <p>Todas as 9 colunas da tabela de transações</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">🔄</div>
+      <h4>Multi-página</h4>
+      <p>Processa tabelas que continuam em várias páginas</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">⚡</div>
+      <h4>Batch Processing</h4>
+      <p>Múltiplos PDFs em um único Excel</p>
+    </div>
+  </div>
+</div>
+
+<!-- style -->
+<link rel="stylesheet" href="css/btg.css" />
+
+<!-- Carregar JavaScript externo -->
+<script src="/js/btg.js"></script>
