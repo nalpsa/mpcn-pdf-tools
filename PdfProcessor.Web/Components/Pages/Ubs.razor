@@ -1,0 +1,68 @@
+@page "/ubs"
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>UBS Switzerland - Extrator PDF</PageTitle>
+
+<link href="css/ubs.css" rel="stylesheet" />
+
+<div class="ubs-container">
+    <div class="header">
+        <h1>🏦 UBS Switzerland</h1>
+        <p class="subtitle">Extração de Account Statements (USD/CHF)</p>
+    </div>
+
+    <div class="info-box">
+        <h3>ℹ️ Informações</h3>
+        <ul>
+            <li><strong>Formato:</strong> UBS Current Account Statement PDF</li>
+            <li><strong>Múltiplas contas:</strong> Processa todas as contas do PDF</li>
+            <li><strong>Colunas extraídas:</strong> Date, Information, Debits, Credits, Value Date, Balance</li>
+            <li><strong>Saída:</strong> Arquivo Excel (.xlsx) consolidado</li>
+        </ul>
+    </div>
+
+    <div class="upload-section">
+        <div id="uploadArea" class="upload-area">
+            <div class="upload-icon">📄</div>
+            <h3>Arraste os PDFs aqui</h3>
+            <p>ou clique para selecionar</p>
+            <input type="file" 
+                   id="fileInput" 
+                   class="hidden-file-input" 
+                   multiple 
+                   accept=".pdf" />
+        </div>
+
+        <div id="fileList" class="file-list" style="display: none;">
+            <h3>Arquivos Selecionados:</h3>
+            <div id="fileListContent"></div>
+            <button id="processBtn" class="process-btn">
+                🚀 Processar PDFs
+            </button>
+        </div>
+    </div>
+
+    <div id="resultSection" class="result-section" style="display: none;">
+        <div class="result-success">
+            <h3>✅ Processamento Concluído!</h3>
+            <p id="resultMessage"></p>
+            <a id="downloadLink" class="download-btn" download>
+                📥 Download Excel
+            </a>
+        </div>
+    </div>
+
+    <div id="errorSection" class="error-section" style="display: none;">
+        <div class="error-message">
+            <h3>❌ Erro no Processamento</h3>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="loadingSection" class="loading-section" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processando PDFs do UBS Switzerland...</p>
+    </div>
+</div>
+
+<script src="js/ubs.js"></script>
