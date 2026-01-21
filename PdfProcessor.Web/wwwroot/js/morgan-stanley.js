@@ -168,7 +168,7 @@ async function processFiles() {
       const url = window.URL.createObjectURL(blob);
       const filename =
         response.headers.get("content-disposition")?.split("filename=")[1] ||
-        "ubs_switzerland.xlsx";
+        "morgan-stanley.xlsx";
 
       showSuccess(filename, url);
       console.log("✅ Sucesso! Arquivo Excel gerado");

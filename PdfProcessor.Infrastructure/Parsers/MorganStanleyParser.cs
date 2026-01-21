@@ -2,11 +2,40 @@ using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
 using PdfProcessor.Core.Interfaces;
 using PdfProcessor.Core.Models;
+using System.Text.RegularExpressions;
 
 namespace PdfProcessor.Infrastructure.Parsers;
 
 public class MorganStanleyParser : IMorganStanleyParser
 {
+  // ✅ POSIÇÕES REAIS detectadas no DEBUG
+  private class ColumnRanges
+  {
+    public float ActivityDateStart = 30;
+    public float ActivityDateEnd = 75;
+
+    public float SettlementDateStart = 75;
+    public float SettlementDateEnd = 113;
+
+    public float ActivityTypeStart = 113;
+    public float ActivityTypeEnd = 210;
+
+    public float DescriptionStart = 210;
+    public float DescriptionEnd = 364;
+
+    public float CommentsStart = 364;
+    public float CommentsEnd = 567;
+
+    public float QuantityStart = 567;
+    public float QuantityEnd = 613;
+
+    public float PriceStart = 613;
+    public float PriceEnd = 700;
+
+    public float CreditsDebitsStart = 720;
+    public float CreditsDebitsEnd = 800;
+  }
+
   public async Task<List<MorganStanleyTransaction>> ParsePdfAsync(Stream pdfStream, string fileName)
   {
     var transactions = new List<MorganStanleyTransaction>();
@@ -15,115 +44,195 @@ public class MorganStanleyParser : IMorganStanleyParser
     {
       try
       {
-        Console.WriteLine($"\n🔍 === MORGAN STANLEY - MODO DEBUG ===");
-        Console.WriteLine($"📄 Arquivo: {fileName}\n");
+        Console.WriteLine($"📄 Processando {fileName}");
 
         pdfStream.Position = 0;
         using var pdfReader = new PdfReader(pdfStream);
 
         int totalPages = pdfReader.NumberOfPages;
-        Console.WriteLine($"📄 Total de páginas: {totalPages}\n");
+        string currentAccountNumber = "";
 
-        // Processar apenas primeira página para debug
-        for (int pageNum = 1; pageNum <= Math.Min(2, totalPages); pageNum++)
+        for (int pageNum = 1; pageNum <= totalPages; pageNum++)
         {
-          Console.WriteLine($"📄 === PÁGINA {pageNum} ===\n");
+          var text = PdfTextExtractor.GetTextFromPage(pdfReader, pageNum);
 
-          var strategy = new LocationTextExtractionStrategyEx();
-          var text = PdfTextExtractor.GetTextFromPage(pdfReader, pageNum, strategy);
-
-          var chunks = strategy.GetTextChunks();
-
-          // 1. PROCURAR ACCOUNT NUMBER
+          // ✅ DETECTAR ACCOUNT NUMBER
           var lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-
-          Console.WriteLine("🔍 Procurando Account Number...");
           for (int i = 0; i < lines.Length; i++)
           {
             if (lines[i].Contains("Select UMA Active Assets Account") && i + 1 < lines.Length)
             {
-              Console.WriteLine($"✅ Account encontrado: {lines[i + 1]}");
+              // Próxima linha tem o account number
+              var accountLine = lines[i + 1];
+              // Extrair número (formato: 442-084511-943)
+              var match = Regex.Match(accountLine, @"(\d{3}-\d{6}-\d{3})");
+              if (match.Success)
+              {
+                currentAccountNumber = match.Groups[1].Value;
+                Console.WriteLine($"🏦 Account detectado: {currentAccountNumber}");
+              }
               break;
             }
           }
-          Console.WriteLine();
 
-          // 2. PROCURAR CABEÇALHO DA TABELA
-          var headerChunks = chunks
-                  .Where(c => c.Text.Contains("Activity") || c.Text.Contains("Date") ||
-                             c.Text.Contains("Settlement") || c.Text.Contains("Type") ||
-                             c.Text.Contains("Description") || c.Text.Contains("Comments") ||
-                             c.Text.Contains("Quantity") || c.Text.Contains("Price") ||
-                             c.Text.Contains("Credits") || c.Text.Contains("Debits"))
-                  .OrderBy(c => c.Y)
-                  .ThenBy(c => c.X)
-                  .ToList();
-
-          if (headerChunks.Any())
+          // ✅ VERIFICAR SE TEM TABELA
+          if (!text.Contains("CASH FLOW ACTIVITY BY DATE"))
           {
-            Console.WriteLine("📋 CABEÇALHOS DA TABELA:");
-            foreach (var chunk in headerChunks.Take(20))
-            {
-              Console.WriteLine($"  X={chunk.X,6:F1}  Y={chunk.Y,6:F1}  Text=\"{chunk.Text}\"");
-            }
-            Console.WriteLine();
+            continue;
           }
 
-          // 3. PROCURAR PRIMEIRA LINHA DE DADOS
-          var lineGroups = chunks
-                  .GroupBy(c => Math.Round(c.Y, 1))
-                  .OrderByDescending(g => g.Key)
-                  .ToList();
+          Console.WriteLine($"\n📄 === PÁGINA {pageNum} ===");
 
-          bool foundHeader = false;
-          int linesShown = 0;
+          var pageTransactions = ExtractTransactionsWithPosition(pdfReader, pageNum, currentAccountNumber);
+          transactions.AddRange(pageTransactions);
 
-          foreach (var lineGroup in lineGroups)
-          {
-            var lineChunks = lineGroup.OrderBy(c => c.X).ToList();
-            var lineText = string.Join("", lineChunks.Select(c => c.Text));
-
-            // Detectar cabeçalho
-            if (lineText.Contains("CASH FLOW ACTIVITY BY DATE"))
-            {
-              foundHeader = true;
-              Console.WriteLine("✅ Início da tabela detectado\n");
-              continue;
-            }
-
-            // Mostrar primeiras 5 linhas após cabeçalho
-            if (foundHeader && linesShown < 5)
-            {
-              Console.WriteLine($"📊 LINHA {linesShown + 1}:");
-              Console.WriteLine($"   Texto: {lineText.Substring(0, Math.Min(100, lineText.Length))}...\n");
-              Console.WriteLine("   POSIÇÕES X:");
-
-              foreach (var chunk in lineChunks.Take(15))
-              {
-                Console.WriteLine($"     X={chunk.X,6:F1}  Text=\"{chunk.Text}\"");
-              }
-              Console.WriteLine();
-
-              linesShown++;
-            }
-
-            if (linesShown >= 5) break;
-          }
+          Console.WriteLine($"✅ {pageTransactions.Count} transação(ões) extraída(s)");
         }
 
-        Console.WriteLine("✅ Análise DEBUG concluída!");
-        Console.WriteLine("📝 Use os valores X acima para definir ColumnRanges\n");
-
+        Console.WriteLine($"\n✅ Total: {transactions.Count} transação(ões)");
       }
       catch (Exception ex)
       {
         Console.WriteLine($"❌ Erro: {ex.Message}");
-        Console.WriteLine($"Stack: {ex.StackTrace}");
         throw;
       }
 
       return transactions;
     });
+  }
+
+  private List<MorganStanleyTransaction> ExtractTransactionsWithPosition(PdfReader reader, int pageNum, string accountNumber)
+  {
+    var transactions = new List<MorganStanleyTransaction>();
+    var columns = new ColumnRanges();
+
+    try
+    {
+      var strategy = new LocationTextExtractionStrategyEx();
+      var pageText = PdfTextExtractor.GetTextFromPage(reader, pageNum, strategy);
+
+      var chunks = strategy.GetTextChunks();
+
+      var lineGroups = chunks
+          .GroupBy(c => Math.Round(c.Y, 1))
+          .OrderByDescending(g => g.Key)
+          .ToList();
+
+      bool inTableSection = false;
+      MorganStanleyTransaction? currentTransaction = null;
+
+      foreach (var lineGroup in lineGroups)
+      {
+        var lineChunks = lineGroup.OrderBy(c => c.X).ToList();
+        var lineText = string.Join("", lineChunks.Select(c => c.Text));
+
+        // Detectar início
+        if (lineText.Contains("CASH FLOW ACTIVITY BY DATE"))
+        {
+          inTableSection = true;
+          Console.WriteLine("✅ Início da tabela detectado");
+          continue;
+        }
+
+        // Pular cabeçalho das colunas
+        if (lineText.Contains("Activity") && lineText.Contains("Date") && lineText.Contains("Type"))
+        {
+          continue;
+        }
+
+        // Detectar fim
+        if (lineText.Contains("NET CREDITS/(DEBITS)"))
+        {
+          if (currentTransaction != null)
+          {
+            transactions.Add(currentTransaction);
+            currentTransaction = null;
+          }
+          Console.WriteLine("✅ Fim da tabela detectado");
+          break;
+        }
+
+        if (!inTableSection)
+        {
+          continue;
+        }
+
+        // ✅ VERIFICAR SE É NOVA TRANSAÇÃO OU CONTINUAÇÃO
+        var activityDate = GetTextInRange(lineChunks, columns.ActivityDateStart, columns.ActivityDateEnd);
+        var settlementDate = GetTextInRange(lineChunks, columns.SettlementDateStart, columns.SettlementDateEnd);
+
+        // Se TEM data (activity ou settlement) = NOVA transação
+        bool hasDate = !string.IsNullOrWhiteSpace(activityDate) && Regex.IsMatch(activityDate, @"\d+/\d+");
+
+        if (hasDate)
+        {
+          // Salvar transação anterior
+          if (currentTransaction != null)
+          {
+            transactions.Add(currentTransaction);
+          }
+
+          // Criar nova transação
+          currentTransaction = new MorganStanleyTransaction();
+          currentTransaction.AccountNumber = accountNumber;
+          currentTransaction.ActivityDate = activityDate;
+          currentTransaction.SettlementDate = settlementDate;
+          currentTransaction.ActivityType = GetTextInRange(lineChunks, columns.ActivityTypeStart, columns.ActivityTypeEnd);
+          currentTransaction.Description = GetTextInRange(lineChunks, columns.DescriptionStart, columns.DescriptionEnd);
+          currentTransaction.Comments = GetTextInRange(lineChunks, columns.CommentsStart, columns.CommentsEnd);
+          currentTransaction.Quantity = GetTextInRange(lineChunks, columns.QuantityStart, columns.QuantityEnd);
+          currentTransaction.Price = GetTextInRange(lineChunks, columns.PriceStart, columns.PriceEnd);
+          currentTransaction.CreditsDebits = GetTextInRange(lineChunks, columns.CreditsDebitsStart, columns.CreditsDebitsEnd);
+
+          Console.WriteLine($"   ✓ {currentTransaction.ActivityDate} | {currentTransaction.ActivityType}");
+        }
+        // Se NÃO tem data = CONTINUAÇÃO (multilinha)
+        else if (currentTransaction != null)
+        {
+          var activityTypeExtra = GetTextInRange(lineChunks, columns.ActivityTypeStart, columns.ActivityTypeEnd);
+          var descriptionExtra = GetTextInRange(lineChunks, columns.DescriptionStart, columns.DescriptionEnd);
+          var commentsExtra = GetTextInRange(lineChunks, columns.CommentsStart, columns.CommentsEnd);
+
+          if (!string.IsNullOrWhiteSpace(activityTypeExtra))
+          {
+            currentTransaction.ActivityType += " " + activityTypeExtra;
+          }
+
+          if (!string.IsNullOrWhiteSpace(descriptionExtra))
+          {
+            currentTransaction.Description += " " + descriptionExtra;
+          }
+
+          if (!string.IsNullOrWhiteSpace(commentsExtra))
+          {
+            currentTransaction.Comments += " " + commentsExtra;
+          }
+        }
+      }
+
+      // Adicionar última transação
+      if (currentTransaction != null)
+      {
+        transactions.Add(currentTransaction);
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"❌ Erro ao processar página {pageNum}: {ex.Message}");
+    }
+
+    return transactions;
+  }
+
+  private string GetTextInRange(List<TextChunkEx> chunks, float startX, float endX)
+  {
+    var textsInRange = chunks
+        .Where(c => c.X >= startX && c.X < endX)
+        .OrderBy(c => c.X)
+        .Select(c => c.Text)
+        .ToList();
+
+    return string.Join(" ", textsInRange).Trim();
   }
 
   private class TextChunkEx
