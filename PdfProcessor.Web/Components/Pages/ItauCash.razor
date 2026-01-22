@@ -18,7 +18,7 @@
       <div>
         <strong>Extração de Cash Transactions:</strong>
         <p style="margin: 0.5rem 0 0 0; color: #666;">
-          O sistema detecta automaticamente <strong>múltiplas contas no mesmo PDF</strong> (USD, EUR, BRL, etc.), 
+          O sistema detecta automaticamente <strong>múltiplas contas no mesmo PDF</strong> (USD, EUR, BRL, etc.),
           criando uma <strong>aba separada</strong> para cada conta no arquivo Excel final.
         </p>
       </div>
@@ -41,8 +41,10 @@
       <div>
         <strong>Pontos importantes para ajustar no XLSX:</strong>
         <p style="margin: 0.5rem 0 0 0; color: #666;">
-          Quando a tabela passa de uma página, a última linha de cada página deve ser <strong>AJUSTADA</strong> no XLSX, Pois, após a descrição correta, uma <strong>frase lixo</strong> acaba sendo inserida.
-          Após a descrição correta, é acrescentado algo como <strong>"=== PÁGINA 9 === Transactions Operation Date Value Date Description Value Account Balance"</strong>, e isso deve ser removido.
+          Quando a tabela passa de uma página, a última linha de cada página deve ser <strong>AJUSTADA</strong> no XLSX,
+          Pois, após a descrição correta, uma <strong>frase lixo</strong> acaba sendo inserida.
+          Após a descrição correta, é acrescentado algo como <strong>"=== PÁGINA 9 === Transactions Operation Date Value
+            Date Description Value Account Balance"</strong>, e isso deve ser removido.
         </p>
       </div>
     </div>
@@ -71,7 +73,8 @@
     </div>
 
     <div class="upload-section">
-      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <!-- ✅ CORRETO: Sem onclick inline - gerenciado pelo pdf-upload-handler.js -->
+      <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📄</div>
         <div class="upload-text">Clique aqui ou arraste os PDFs</div>
         <div class="upload-hint">Selecione múltiplos PDFs do Itaú (máx. 16MB cada)</div>
@@ -134,8 +137,20 @@
   </div>
 </div>
 
-<!-- style -->
-<link rel="stylesheet" href="css/itau-cash.css" />
+<!-- ========================================
+     CSS - Ordem crítica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/itau-cash.css" />
 
+<!-- ========================================
+     JavaScript - Ordem crítica
+     ======================================== -->
+<!-- 1. Configuração da API -->
+<script src="/js/api-config.js"></script>
 
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. Lógica específica do Itaú Cash -->
 <script src="/js/itau-cash.js"></script>

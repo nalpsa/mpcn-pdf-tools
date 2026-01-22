@@ -18,7 +18,8 @@
       <div>
         <strong>Extração de Movimentação Bancária:</strong>
         <p style="margin: 0.5rem 0 0 0; color: #666;">
-          O sistema identifica automaticamente <strong>múltiplas contas</strong> pelos códigos de agência e conta corrente,
+          O sistema identifica automaticamente <strong>múltiplas contas</strong> pelos códigos de agência e conta
+          corrente,
           criando uma <strong>aba separada</strong> para cada conta no arquivo Excel final.
         </p>
       </div>
@@ -52,13 +53,16 @@
       <div>
         <strong>Pontos importantes para ajustar no XLSX:</strong>
         <p style="margin: 0.5rem 0 0 0; color: #666;">
-          A Primeira e última linha de cada mês deve ser <strong>EXCLUÍDA</strong> Pois estas linhas não fazem parte da movimentação.
-          A primeira linha tem na descrição algo como <strong>"pela Bolsa de Valores"</strong>, e a última tem a descrição, algo como <strong>"Saldo em C/C"</strong>.
+          A Primeira e última linha de cada mês deve ser <strong>EXCLUÍDA</strong> Pois estas linhas não fazem parte da
+          movimentação.
+          A primeira linha tem na descrição algo como <strong>"pela Bolsa de Valores"</strong>, e a última tem a
+          descrição, algo como <strong>"Saldo em C/C"</strong>.
         </p>
       </div>
     </div>
 
     <div class="upload-section">
+      <!-- ✅ CORRETO: Sem onclick inline - gerenciado pelo pdf-upload-handler.js -->
       <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📄</div>
         <div class="upload-text">Clique aqui ou arraste os PDFs</div>
@@ -111,8 +115,20 @@
   </div>
 </div>
 
-<!-- style -->
-<link rel="stylesheet" href="css/itau-movimentacao.css" />
+<!-- ========================================
+     CSS - Ordem crítica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/itau-movimentacao.css" />
 
-<!-- Carregar JavaScript externo -->
+<!-- ========================================
+     JavaScript - Ordem crítica
+     ======================================== -->
+<!-- 1. Configuração da API -->
+<script src="/js/api-config.js"></script>
+
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. Lógica específica do Itaú Movimentação -->
 <script src="/js/itau-movimentacao.js"></script>

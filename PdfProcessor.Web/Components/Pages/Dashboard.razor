@@ -1,117 +1,150 @@
-﻿@page "/"
+@page "/"
 @page "/dashboard"
 
 <PageTitle>Extrator Tabelas PF - Dashboard</PageTitle>
 
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <h1>📄 Extrator Tabelas PF</h1>
-    <p class="subtitle">Sistema de Extração e Manipulação de PDFs Bancários</p>
-  </div>
-
-  <div class="cards-grid">
-    <!-- Seção: Ferramentas PDF -->
-    <div class="section-header">
-      <h2>🛠️ Ferramentas PDF</h2>
-    </div>
-
-    <div class="card tool-card" onclick="window.location.href='/rotate-pdf'">
-      <div class="card-icon">🔄</div>
-      <div class="card-content">
-        <h3>Rotacionar PDF</h3>
-        <p>Rotacione páginas de PDFs com preview em tempo real</p>
-        <span class="card-badge">Múltiplos arquivos</span>
-      </div>
-    </div>
-
-    <div class="card tool-card" onclick="window.location.href='/compress-pdf'">
-      <div class="card-icon">🗜️</div>
-      <div class="card-content">
-        <h3>Comprimir PDF</h3>
-        <p>Reduza o tamanho de arquivos PDF mantendo a qualidade</p>
-        <span class="card-badge">3 níveis</span>
-      </div>
-    </div>
-
-    <div class="card tool-card"  onclick="window.location.href='/merge-pdf'">
-      <div class="card-icon">🔗</div>
-      <div class="card-content">
-        <h3>Mesclar PDF</h3>
-        <p>Combine múltiplos PDFs em um único arquivo</p>
-        <span class="card-badge">Junte PDFs</span>
-      </div>
-    </div>
-
-    <!-- Seção: Bancos -->
-    <div class="section-header">
-      <h2>🏦 Extração Bancária</h2>
-    </div>
-
-    <div class="card bank-card"  onclick="window.location.href='/itau-cash'">
-      <div class="card-icon">🟧</div>
-      <div class="card-content">
-        <h3>Itaú - Cash Transactions</h3>
-        <p>Extração de transações em múltiplas moedas (USD, EUR, BRL)</p>
-        <span class="card-badge">Contas PF</span>
-      </div>
-    </div>
-
-    <div class="card bank-card coming-soon" title="Em breve">
-      <div class="card-icon">💳</div>
-      <div class="card-content">
-        <h3>Morgan Stanley</h3>
-        <p>Extração completa de movimentação bancária</p>
-        <span class="card-badge disabled">Em breve</span>
-      </div>
-    </div>
-
-    <div class="card bank-card coming-soon" title="Em breve">
-      <div class="card-icon">🔜</div>
-      <div class="card-content">
-        <h3>Outros Bancos</h3>
-        <p>Morgan Stanley, Julius Baer, Raymond James...</p>
-        <span class="card-badge disabled">Em breve</span>
-      </div>
-    </div>
-
-    <!-- Seção: Bancos -->
-    <div class="section-header">
-      <h2>🏦 Movimentação Bancária</h2>
-    </div>
-
-    <div class="card bank-card"   onclick="window.location.href='/itau-movimentacao'">
-      <div class="card-icon">💳</div>
-      <div class="card-content">
-        <h3>Itaú - Movimentação</h3>
-        <p>Extração completa de movimentação bancária</p>
-        <span class="card-badge">Extrato</span>
-      </div>
-    </div>
-    
-  </div>
-
-  <!-- Informações do Sistema -->
-  <div class="system-info">
-    <div class="info-card">
-      <span class="info-icon">ℹ️</span>
-      <div>
-        <strong>Tamanho máximo:</strong> 16MB por arquivo
-      </div>
-    </div>
-    <div class="info-card">
-      <span class="info-icon">📊</span>
-      <div>
-        <strong>Formatos suportados:</strong> PDF
-      </div>
-    </div>
-    <div class="info-card">
-      <span class="info-icon">💾</span>
-      <div>
-        <strong>Saída:</strong> Excel (.xlsx), PDF, ZIP
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- style -->
 <link rel="stylesheet" href="css/dashboard.css" />
+
+<div class="dashboard-modern">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>📄 Extrator Tabelas PF</h1>
+                <p>Sistema de Extração e Manipulação de PDFs Bancários</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">Bancos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">3</span>
+                    <span class="stat-label">Ferramentas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de Cards -->
+    <div class="cards-container">
+
+        <!-- Seção: Extração Bancária -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🏦 Extração Bancária</h2>
+                <span class="section-count">4 bancos disponíveis</span>
+            </div>
+
+            <div class="cards-grid">
+                <a href="/itau-cash" class="card bank-card">
+                    <div class="card-icon itau">🟧</div>
+                    <div class="card-body">
+                        <h3>Itaú Cash</h3>
+                        <p>Transações em USD/EUR/BRL</p>
+                    </div>
+                    <div class="card-badge active">Ativo</div>
+                </a>
+
+                <a href="/btg" class="card bank-card">
+                    <div class="card-icon btg">🏦</div>
+                    <div class="card-body">
+                        <h3>BTG Pactual</h3>
+                        <p>Account Statements</p>
+                    </div>
+                    <div class="card-badge active">Ativo</div>
+                </a>
+
+                <a href="/ubs" class="card bank-card">
+                    <div class="card-icon ubs">💼</div>
+                    <div class="card-body">
+                        <h3>UBS Switzerland</h3>
+                        <p>Current Account USD/CHF</p>
+                    </div>
+                    <div class="card-badge active">Ativo</div>
+                </a>
+
+                <a href="/morgan-stanley" class="card bank-card">
+                    <div class="card-icon morgan">📊</div>
+                    <div class="card-body">
+                        <h3>Morgan Stanley</h3>
+                        <p>Cash Flow Activity</p>
+                    </div>
+                    <div class="card-badge active">Ativo</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Seção: Extração Bancária -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🏦 Movimentação Bancária</h2>
+                <span class="section-count">1 banco disponível</span>
+            </div>
+
+            <div class="cards-grid">
+                <a href="/itau-movimentacao" class="card bank-card">
+                    <div class="card-icon itau">💳</div>
+                    <div class="card-body">
+                        <h3>Itaú Movimentação</h3>
+                        <p>Extrato completo bancário</p>
+                    </div>
+                    <div class="card-badge active">Ativo</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Seção: Ferramentas PDF -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🛠️ Ferramentas PDF</h2>
+                <span class="section-count">3 ferramentas</span>
+            </div>
+
+            <div class="cards-grid tools-grid">
+                <a href="/rotate-pdf" class="card tool-card">
+                    <div class="card-icon tool">🔄</div>
+                    <div class="card-body">
+                        <h3>Rotacionar</h3>
+                        <p>Gire páginas com preview</p>
+                    </div>
+                </a>
+
+                <a href="/compress-pdf" class="card tool-card">
+                    <div class="card-icon tool">🗜️</div>
+                    <div class="card-body">
+                        <h3>Comprimir</h3>
+                        <p>Reduza tamanho (3 níveis)</p>
+                    </div>
+                </a>
+
+                <a href="/merge-pdf" class="card tool-card">
+                    <div class="card-icon tool">🔗</div>
+                    <div class="card-body">
+                        <h3>Mesclar</h3>
+                        <p>Combine múltiplos PDFs</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Info -->
+    <div class="dashboard-footer">
+        <div class="footer-info">
+            <div class="info-item">
+                <span class="info-icon">📁</span>
+                <span>Máx: 16MB por arquivo</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">📊</span>
+                <span>Saída: Excel (.xlsx)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">🔒</span>
+                <span>Processamento local seguro</span>
+            </div>
+        </div>
+    </div>
+</div>

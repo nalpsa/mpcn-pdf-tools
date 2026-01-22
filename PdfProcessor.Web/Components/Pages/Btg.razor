@@ -95,7 +95,12 @@
 </div>
 
 <!-- style -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
 <link rel="stylesheet" href="css/btg.css" />
 
-<!-- Carregar JavaScript externo -->
+<!-- 1. Carregar dependências compartilhadas PRIMEIRO -->
+<script src="/js/api-config.js"></script>
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 2. Carregar script específico do banco DEPOIS -->
 <script src="/js/btg.js"></script>
