@@ -3,12 +3,13 @@
 
 <PageTitle>UBS Switzerland - Extrator PDF</PageTitle>
 
-<link href="css/ubs.css" rel="stylesheet" />
-
 <div class="ubs-container">
-    <div class="header">
-        <h1>🏦 UBS Switzerland</h1>
-        <p class="subtitle">Extração de Account Statements (USD/CHF)</p>
+    <div class="page-header">
+        <div class="header-icon">🏦</div>
+        <div>
+            <h1>UBS Switzerland</h1>
+            <p class="subtitle">Extração de Account Statements (USD/CHF)</p>
+        </div>
     </div>
 
     <div class="info-box">
@@ -22,16 +23,13 @@
     </div>
 
     <div class="upload-section">
+        <!-- ✅ CORRETO: Sem onclick inline - gerenciado pelo pdf-upload-handler.js -->
         <div id="uploadArea" class="upload-area">
             <div class="upload-icon">📄</div>
             <h3>Arraste os PDFs aqui</h3>
             <p>ou clique para selecionar</p>
-            <input type="file" 
-                   id="fileInput" 
-                   class="hidden-file-input" 
-                   multiple 
-                   accept=".pdf" />
         </div>
+        <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
 
         <div id="fileList" class="file-list" style="display: none;">
             <h3>Arquivos Selecionados:</h3>
@@ -65,4 +63,20 @@
     </div>
 </div>
 
-<script src="js/ubs.js"></script>
+<!-- ========================================
+     CSS - Ordem crítica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/ubs.css" />
+
+<!-- ========================================
+     JavaScript - Ordem crítica
+     ======================================== -->
+<!-- 1. Configuração da API -->
+<script src="/js/api-config.js"></script>
+
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. Lógica específica do UBS -->
+<script src="/js/ubs.js"></script>

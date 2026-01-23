@@ -1,196 +1,35 @@
-console.log("🟢 UBS Switzerland carregado");
+// ================================================================
+// UBS SWITZERLAND - Script de Upload Simplificado
+// ================================================================
+// Este arquivo usa o sistema compartilhado PdfUploadHandler
+// Apenas define a lógica específica do UBS
+// ================================================================
 
-// Detectar configuração de rede
-console.log("🔍 Detectando configuração de rede...");
-console.log("  Hostname:", window.location.hostname);
-console.log("  Port:", window.location.port);
+console.log("🟢 UBS Switzerland - Script carregado");
 
-let API_BASE_URL;
-
-if (
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-) {
-  API_BASE_URL = "http://localhost:5239";
-  console.log("✅ Modo: LOCALHOST");
-} else {
-  const detectedIp = window.location.hostname;
-  API_BASE_URL = `http://${detectedIp}:5239`;
-  console.log("✅ Modo: REDE LOCAL (IP detectado)");
-}
-
-console.log("  API URL:", API_BASE_URL);
-
-const API_URL = `${API_BASE_URL}/api/ubs/batch`;
-console.log("🔧 API configurada:", API_URL);
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
 
 let selectedFiles = [];
 
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("🔧 DOM carregado - Iniciando configuração...");
+// ============================================================
+// API CONFIGURATION
+// ============================================================
 
-  const fileInput = document.getElementById("fileInput");
-  const uploadArea = document.getElementById("uploadArea");
-
-  console.log("🔧 Configurando file input...");
-
-  if (!fileInput || !uploadArea) {
-    console.error("❌ Elementos não encontrados:", { fileInput, uploadArea });
-    return;
-  }
-
-  console.log("✅ Elementos encontrados:", { fileInput, uploadArea });
-
-  // Click no upload area
-  uploadArea.addEventListener("click", () => {
-    console.log("🖱️ Upload area clicada");
-    fileInput.click();
-  });
-
-  // Seleção de arquivos
-  fileInput.addEventListener("change", (e) => {
-    console.log("📂 Arquivos selecionados via input");
-    handleFiles(e.target.files);
-  });
-
-  console.log("✅ File input configurado com sucesso");
-
-  // Drag & Drop
-  console.log("🔧 Configurando Drag & Drop...");
-
-  uploadArea.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    uploadArea.classList.add("drag-over");
-  });
-
-  uploadArea.addEventListener("dragleave", () => {
-    uploadArea.classList.remove("drag-over");
-  });
-
-  uploadArea.addEventListener("drop", (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove("drag-over");
-    console.log("\n📂 ========== ARQUIVOS ARRASTADOS ==========");
-    console.log("Files:", e.dataTransfer.files);
-    console.log("Total de arquivos:", e.dataTransfer.files.length);
-    handleFiles(e.dataTransfer.files);
-  });
-
-  console.log("✅ Drag & Drop configurado com sucesso");
-
-  // Botão processar
-  const processBtn = document.getElementById("processBtn");
-  if (processBtn) {
-    processBtn.addEventListener("click", processFiles);
-  }
-});
-
-function handleFiles(files) {
-  console.log("\n📂 ========== HANDLE FILES ==========");
-  console.log("Files recebidos:", files);
-  console.log("Quantidade:", files.length);
-
-  selectedFiles = [];
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    console.log(`\n📄 Arquivo ${i + 1}: ${file.name} (${file.size} bytes)`);
-
-    if (file.type === "application/pdf") {
-      selectedFiles.push(file);
-      console.log("✅ Arquivo válido adicionado");
-    } else {
-      console.warn("⚠️ Arquivo ignorado (não é PDF)");
-    }
-  }
-
-  console.log(`\n📋 Total de arquivos válidos: ${selectedFiles.length}`);
-  console.log("🎨 Renderizando lista...");
-  renderFileList();
-  console.log("========================================\n");
+function getApiUrl() {
+  return window.PdfProcessorConfig.getEndpoint("/api/ubs/batch");
 }
 
-function renderFileList() {
-  console.log("🎨 Renderizando lista de arquivos...");
-  const fileList = document.getElementById("fileList");
-  const fileListContent = document.getElementById("fileListContent");
-
-  if (selectedFiles.length === 0) {
-    fileList.style.display = "none";
-    return;
-  }
-
-  let html = "<ul>";
-  selectedFiles.forEach((file, index) => {
-    html += `<li>📄 ${file.name} (${(file.size / 1024).toFixed(2)} KB)</li>`;
-  });
-  html += "</ul>";
-
-  fileListContent.innerHTML = html;
-  fileList.style.display = "block";
-
-  console.log(`📋 Mostrando ${selectedFiles.length} arquivo(s)`);
-  console.log("✅ Lista renderizada com sucesso");
-}
-
-async function processFiles() {
-  console.log("\n🏦 ========== INICIANDO PROCESSAMENTO ==========");
-
-  if (selectedFiles.length === 0) {
-    alert("Selecione pelo menos um arquivo PDF");
-    return;
-  }
-
-  console.log(`📊 Processando ${selectedFiles.length} arquivo(s)`);
-
-  const formData = new FormData();
-  selectedFiles.forEach((file, index) => {
-    formData.append("files", file);
-    console.log(`📎 Arquivo ${index + 1} adicionado ao FormData: ${file.name}`);
-  });
-
-  console.log(`📡 Enviando para: ${API_URL}`);
-
-  showLoading();
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      body: formData,
-    });
-
-    console.log(
-      `📊 Resposta recebida: ${response.status} ${response.statusText}`,
-    );
-
-    if (response.ok) {
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const filename =
-        response.headers.get("content-disposition")?.split("filename=")[1] ||
-        "ubs_switzerland.xlsx";
-
-      showSuccess(filename, url);
-      console.log("✅ Sucesso! Arquivo Excel gerado");
-    } else {
-      const errorText = await response.text();
-      console.error(" ❌ Erro da API:", errorText);
-      showError(errorText);
-    }
-  } catch (error) {
-    console.error(" ❌ ERRO no processamento:", error);
-    showError(error.message);
-  } finally {
-    hideLoading();
-  }
-
-  console.log("========================================\n");
-}
+// ============================================================
+// UI FUNCTIONS ESPECÍFICAS DO UBS
+// ============================================================
 
 function showLoading() {
   document.getElementById("loadingSection").style.display = "block";
   document.getElementById("resultSection").style.display = "none";
   document.getElementById("errorSection").style.display = "none";
+  document.getElementById("fileList").style.display = "none";
 }
 
 function hideLoading() {
@@ -209,5 +48,164 @@ function showError(message) {
   document.getElementById("errorMessage").textContent = message;
   document.getElementById("errorSection").style.display = "block";
 }
+
+function updateUI() {
+  const fileList = document.getElementById("fileList");
+  const fileListContent = document.getElementById("fileListContent");
+
+  if (selectedFiles.length === 0) {
+    fileList.style.display = "none";
+    return;
+  }
+
+  // Renderizar lista
+  let html = "<ul>";
+  selectedFiles.forEach((file) => {
+    html += `<li>📄 ${file.name} (${(file.size / 1024).toFixed(2)} KB)</li>`;
+  });
+  html += "</ul>";
+
+  fileListContent.innerHTML = html;
+  fileList.style.display = "block";
+
+  console.log(`📋 Mostrando ${selectedFiles.length} arquivo(s)`);
+}
+
+// ============================================================
+// FILE MANAGEMENT
+// ============================================================
+
+function clearFiles() {
+  console.log("🗑️ Limpando todos os arquivos");
+  selectedFiles = [];
+  updateUI();
+
+  // Esconder sections
+  document.getElementById("resultSection").style.display = "none";
+  document.getElementById("errorSection").style.display = "none";
+}
+
+// ============================================================
+// CALLBACK DE ARQUIVOS SELECIONADOS
+// ============================================================
+
+function onFilesSelected(validFiles, errors) {
+  console.log("📁 Callback recebido:", {
+    validFiles: validFiles.length,
+    errors: errors.length,
+  });
+
+  // Adicionar arquivos válidos
+  selectedFiles = validFiles;
+
+  // Mostrar erros se houver
+  if (errors.length > 0) {
+    showError(errors[0]);
+  }
+
+  // Atualizar interface
+  updateUI();
+}
+
+// ============================================================
+// PROCESSAR ARQUIVOS
+// ============================================================
+
+async function processFiles() {
+  if (selectedFiles.length === 0) {
+    showError("Selecione pelo menos um arquivo PDF");
+    return;
+  }
+
+  console.log(
+    "🚀 Iniciando processamento de",
+    selectedFiles.length,
+    "arquivo(s)",
+  );
+
+  showLoading();
+
+  try {
+    // Criar FormData
+    const formData = new FormData();
+    selectedFiles.forEach((file, index) => {
+      formData.append("files", file);
+      console.log(`📎 Arquivo ${index + 1} adicionado: ${file.name}`);
+    });
+
+    console.log("📤 Enviando para API:", getApiUrl());
+
+    // Fazer requisição
+    const response = await fetch(getApiUrl(), {
+      method: "POST",
+      body: formData,
+    });
+
+    console.log("📥 Resposta recebida:", response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro ${response.status}: ${errorText}`);
+    }
+
+    // Download do arquivo Excel
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // Tentar extrair filename do header
+    const filename =
+      response.headers.get("content-disposition")?.split("filename=")[1] ||
+      `ubs_switzerland_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+    console.log("✅ Sucesso! Arquivo:", filename);
+
+    showSuccess(filename, url);
+  } catch (error) {
+    console.error("❌ Erro no processamento:", error);
+    showError(error.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+
+// Tornar função disponível globalmente para reinicialização
+window.initializePdfUpload = function () {
+  console.log("🔧 Inicializando UBS Switzerland Upload Handler...");
+
+  window.PdfUploadHandler.init({
+    uploadAreaId: "uploadArea",
+    fileInputId: "fileInput",
+    onFilesSelected: onFilesSelected,
+    maxFileSize: 16 * 1024 * 1024, // 16MB
+    allowMultiple: true,
+    debug: true,
+  });
+
+  // Adicionar listener ao botão processar
+  const processBtn = document.getElementById("processBtn");
+  if (processBtn) {
+    processBtn.addEventListener("click", processFiles);
+    console.log("✅ Botão processar configurado");
+  }
+};
+
+// Inicialização automática
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", window.initializePdfUpload);
+} else {
+  // DOM já carregado (navegação SPA do Blazor)
+  setTimeout(window.initializePdfUpload, 50);
+}
+
+// ============================================================
+// FUNÇÕES GLOBAIS (chamadas pelo HTML)
+// ============================================================
+
+window.processFiles = processFiles;
+window.clearFiles = clearFiles;
 
 console.log("✅ Script ubs.js carregado completamente");

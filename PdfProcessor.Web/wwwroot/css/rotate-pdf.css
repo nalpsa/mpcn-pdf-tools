@@ -1,3 +1,14 @@
+/* ================================================================
+   ROTATE PDF - Estilos Específicos da Página
+   ================================================================
+   Este arquivo contém estilos específicos da ferramenta Rotate PDF
+   Estilos de upload básico estão em pdf-upload-shared.css
+   ================================================================ */
+
+/* ============================================================
+   LAYOUT DA PÁGINA
+   ============================================================ */
+
 .page-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -27,6 +38,10 @@
   margin: 0;
 }
 
+/* ============================================================
+   CONTENT CARD
+   ============================================================ */
+
 .content-card {
   background: white;
   border-radius: 12px;
@@ -34,6 +49,10 @@
   padding: 2rem;
   margin-bottom: 2rem;
 }
+
+/* ============================================================
+   INFO BOX
+   ============================================================ */
 
 .info-box {
   padding: 1.5rem;
@@ -50,64 +69,25 @@
 
 .info-icon {
   font-size: 1.5rem;
+  flex-shrink: 0;
 }
 
 .upload-section {
   margin-bottom: 2rem;
 }
 
-.upload-area {
-  border: 3px dashed #cbd5e0;
-  border-radius: 12px;
-  padding: 3rem 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.upload-area:hover {
-  border-color: #667eea;
-  background: #f7fafc;
-}
-
-/* ✅ Estilo para drag over */
-.upload-area.drag-over {
-  border-color: #667eea;
-  background: #f7fafc;
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-}
-
-.upload-icon {
-  font-size: 3rem;
-  color: #cbd5e0;
-  margin-bottom: 1rem;
-}
-
-.upload-area:hover .upload-icon {
-  color: #667eea;
-}
-
-.upload-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.5rem;
-}
-
-.upload-hint {
-  font-size: 0.9rem;
-  color: #718096;
-}
-
-.hidden-file-input {
-  display: none;
-}
+/* ============================================================
+   FILE COUNTER (ESPECÍFICO DO ROTATE)
+   ============================================================ */
 
 .file-counter {
   text-align: center;
   padding: 1rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.1) 100%
+  );
   border-radius: 8px;
   margin: 2rem auto;
   max-width: 400px;
@@ -125,6 +105,10 @@
   color: #667eea;
 }
 
+/* ============================================================
+   PREVIEW SECTION
+   ============================================================ */
+
 .preview-section {
   margin-top: 2rem;
 }
@@ -138,55 +122,9 @@
   margin-bottom: 2rem;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-.btn-secondary {
-  background: #e2e8f0;
-  color: #2d3748;
-}
-
-.btn-secondary:hover {
-  background: #cbd5e0;
-  transform: translateY(-2px);
-}
-
-.btn-success {
-  background: #48bb78;
-  color: white;
-}
-
-.btn-success:hover {
-  background: #38a169;
-  transform: translateY(-2px);
-}
-
-.btn-danger {
-  background: #f56565;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #e53e3e;
-  transform: translateY(-2px);
-}
+/* ============================================================
+   PDF GRID (ESPECÍFICO DO ROTATE)
+   ============================================================ */
 
 .pdf-grid {
   display: grid;
@@ -221,6 +159,7 @@
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
+  z-index: 10;
 }
 
 .pdf-checkbox input[type="checkbox"] {
@@ -284,49 +223,9 @@
   margin-top: 0.5rem;
 }
 
-.loading {
-  text-align: center;
-  padding: 2rem;
-}
-
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.alert {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.alert-success {
-  background: #c6f6d5;
-  color: #22543d;
-  border-left: 4px solid #38a169;
-}
-
-.alert-error {
-  background: #fed7d7;
-  color: #742a2a;
-  border-left: 4px solid #e53e3e;
-}
-
-.alert-info {
-  background: #bee3f8;
-  color: #2c5282;
-  border-left: 4px solid #3182ce;
-}
+/* ============================================================
+   FEATURE BOXES
+   ============================================================ */
 
 .feature-boxes {
   display: grid;
@@ -355,23 +254,37 @@
 .feature-box p {
   color: #718096;
   margin: 0;
+  font-size: 0.95rem;
 }
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
 
 @media (max-width: 768px) {
   .page-container {
     padding: 1rem;
   }
 
+  .page-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
   .action-buttons-container {
     flex-direction: column;
   }
 
-  .btn {
+  .action-buttons-container .btn {
     width: 100%;
   }
 
   .pdf-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
+  }
+
+  .content-card {
+    padding: 1.5rem;
   }
 }
