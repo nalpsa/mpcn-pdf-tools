@@ -27,6 +27,7 @@
     </div>
 
     <div class="upload-section">
+      <!-- ✅ CORRETO: Sem onclick inline - gerenciado pelo pdf-upload-handler.js -->
       <label for="fileInput" class="upload-area" id="uploadArea">
         <div class="upload-icon">📁</div>
         <div class="upload-text">Clique aqui ou arraste os PDFs</div>
@@ -83,8 +84,20 @@
   </div>
 </div>
 
-<!-- style -->
-<link rel="stylesheet" href="css/merge-pdf.css" />
+<!-- ========================================
+     CSS - Ordem crítica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/merge-pdf.css" />
 
-<!-- Carregar JavaScript externo -->
+<!-- ========================================
+     JavaScript - Ordem crítica
+     ======================================== -->
+<!-- 1. Configuração da API -->
+<script src="/js/api-config.js"></script>
+
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. Lógica específica do Merge PDF -->
 <script src="/js/merge-pdf.js"></script>

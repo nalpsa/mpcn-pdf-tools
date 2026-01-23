@@ -1,418 +1,344 @@
+/* ================================================================
+   MERGE PDF - Estilos Específicos da Página
+   ================================================================
+   Este arquivo contém APENAS estilos específicos da ferramenta Merge PDF
+   Estilos de upload básico estão em pdf-upload-shared.css
+   
+   COR TEMA: Laranja #ff6b35
+   ================================================================ */
+
+/* ============================================================
+   LAYOUT DA PÁGINA
+   ============================================================ */
+
 .page-container {
-max-width: 1200px;
-margin: 0 auto;
-padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 .page-header {
-display: flex;
-align-items: center;
-gap: 1rem;
-margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .header-icon {
-font-size: 3rem;
+  font-size: 3rem;
 }
 
 .page-header h1 {
-font-size: 2rem;
-font-weight: 700;
-color: #2d3748;
-margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
 }
 
 .subtitle {
-color: #718096;
-margin: 0;
+  color: #718096;
+  margin: 0;
 }
+
+/* ============================================================
+   CONTENT CARD
+   ============================================================ */
 
 .content-card {
-background: white;
-border-radius: 12px;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-padding: 2rem;
-margin-bottom: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
+/* ============================================================
+   INFO BOX
+   ============================================================ */
+
 .info-box {
-padding: 1.5rem;
-border-radius: 8px;
-margin-bottom: 2rem;
-display: flex;
-gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
 }
 
 .info-box.info {
-background: #ebf8ff;
-border-left: 4px solid #3182ce;
+  background: #ebf8ff;
+  border-left: 4px solid #3182ce;
 }
 
 .info-icon {
-font-size: 1.5rem;
+  font-size: 1.5rem;
+  flex-shrink: 0;
 }
 
 .upload-section {
-margin-bottom: 2rem;
+  margin-bottom: 2rem;
 }
 
-.upload-area {
-display: block;
-border: 3px dashed #cbd5e0;
-border-radius: 12px;
-padding: 3rem 2rem;
-text-align: center;
-cursor: pointer;
-transition: all 0.3s ease;
-}
-
-.upload-area:hover {
-border-color: #ff6b35;
-background: #fff4f0;
-}
-
-/* ✅ NOVO: Estilo para drag over */
-.upload-area.drag-over {
-border-color: #ff6b35;
-background: #fff4f0;
-transform: scale(1.02);
-box-shadow: 0 8px 24px rgba(255, 107, 53, 0.2);
-}
-
-.upload-icon {
-font-size: 3rem;
-color: #cbd5e0;
-margin-bottom: 1rem;
-}
-
-.upload-area:hover .upload-icon {
-color: #ff6b35;
-}
-
-.upload-text {
-font-size: 1.1rem;
-font-weight: 600;
-color: #2d3748;
-margin-bottom: 0.5rem;
-}
-
-.upload-hint {
-font-size: 0.9rem;
-color: #718096;
-}
-
-.hidden-file-input {
-display: none;
-}
+/* ============================================================
+   FILE COUNTER (LARANJA)
+   ============================================================ */
 
 .file-counter {
-text-align: center;
-padding: 1rem;
-background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 147, 30, 0.1) 100%);
-border-radius: 8px;
-margin: 2rem auto;
-max-width: 400px;
-border: 2px solid rgba(255, 107, 53, 0.2);
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 53, 0.1) 0%,
+    rgba(247, 147, 30, 0.1) 100%
+  );
+  border-radius: 8px;
+  margin: 2rem auto;
+  max-width: 400px;
+  border: 2px solid rgba(255, 107, 53, 0.2);
 }
 
 .counter-icon {
-font-size: 1.5rem;
-margin-right: 0.5rem;
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
 }
 
 #counterText {
-font-size: 1.1rem;
-font-weight: 600;
-color: #ff6b35;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ff6b35;
 }
 
+/* ============================================================
+   FILES AREA (ESPECÍFICO DO MERGE)
+   ============================================================ */
+
 .files-area {
-margin-top: 2rem;
+  margin-top: 2rem;
 }
 
 .file-item {
-background: white;
-border-radius: 12px;
-padding: 1.5rem;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-border: 2px solid #e2e8f0;
-margin-bottom: 1rem;
-transition: all 0.3s ease;
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e2e8f0;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
 }
 
 .file-item:hover {
-border-color: #ff6b35;
-transform: translateY(-2px);
-box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: #ff6b35;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .file-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
 .file-info {
-display: flex;
-align-items: center;
-gap: 1rem;
-flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
 }
 
 .file-number {
-background: #ff6b35;
-color: white;
-border-radius: 50%;
-width: 40px;
-height: 40px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-weight: 700;
-font-size: 1.1rem;
+  background: #ff6b35;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .file-details {
-flex: 1;
+  flex: 1;
+  min-width: 0; /* Para text-overflow funcionar */
 }
 
 .file-name {
-font-weight: 600;
-color: #2d3748;
-font-size: 1rem;
-word-break: break-word;
-margin-bottom: 0.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1rem;
+  word-break: break-word;
+  margin-bottom: 0.25rem;
 }
 
 .file-meta {
-display: flex;
-gap: 1rem;
-font-size: 0.85rem;
-color: #718096;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #718096;
 }
 
 .file-actions {
-display: flex;
-gap: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .btn-icon {
-background: #e2e8f0;
-border: none;
-border-radius: 6px;
-width: 36px;
-height: 36px;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-transition: all 0.2s ease;
-font-size: 1.2rem;
+  background: #e2e8f0;
+  border: none;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
 }
 
 .btn-icon:hover:not(:disabled) {
-background: #cbd5e0;
-transform: translateY(-1px);
+  background: #cbd5e0;
+  transform: translateY(-1px);
 }
 
 .btn-icon:disabled {
-opacity: 0.4;
-cursor: not-allowed;
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .btn-delete {
-background: #fed7d7;
-color: #c53030;
+  background: #fed7d7;
+  color: #c53030;
 }
 
-.btn-delete:hover {
-background: #fc8181;
-color: white;
+.btn-delete:hover:not(:disabled) {
+  background: #fc8181;
+  color: white;
 }
+
+/* ============================================================
+   PAGE RANGE SECTION (ESPECÍFICO DO MERGE)
+   ============================================================ */
 
 .page-range-section {
-background: #f7fafc;
-border-radius: 8px;
-padding: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 1rem;
 }
 
 .page-range-label {
-font-size: 0.85rem;
-font-weight: 600;
-color: #4a5568;
-margin-bottom: 0.5rem;
-display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .page-range-input {
-width: 100%;
-padding: 0.75rem;
-border: 2px solid #e2e8f0;
-border-radius: 6px;
-font-size: 0.95rem;
-transition: all 0.2s ease;
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
 }
 
 .page-range-input:focus {
-outline: none;
-border-color: #ff6b35;
-box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  outline: none;
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
 .page-range-input.error {
-border-color: #fc8181;
+  border-color: #fc8181;
+  background: #fff5f5;
 }
 
 .page-range-hint {
-font-size: 0.75rem;
-color: #718096;
-margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: 0.5rem;
 }
 
 .range-error {
-color: #c53030;
-font-size: 0.8rem;
-margin-top: 0.5rem;
-display: none;
+  color: #c53030;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: none;
+  font-weight: 600;
 }
 
-.action-section {
-display: flex;
-justify-content: center;
-gap: 1rem;
-margin-top: 2rem;
-flex-wrap: wrap;
-}
-
-.btn {
-padding: 0.75rem 1.5rem;
-border: none;
-border-radius: 8px;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.3s ease;
-font-size: 1rem;
-}
-
-.btn-primary {
-background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-transform: translateY(-2px);
-box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
-}
-
-.btn-primary:disabled {
-opacity: 0.5;
-cursor: not-allowed;
-}
-
-.btn-secondary {
-background: #e2e8f0;
-color: #2d3748;
-}
-
-.btn-secondary:hover {
-background: #cbd5e0;
-}
-
-.loading {
-text-align: center;
-padding: 2rem;
-}
-
-.spinner {
-border: 4px solid #f3f3f3;
-border-top: 4px solid #ff6b35;
-border-radius: 50%;
-width: 40px;
-height: 40px;
-animation: spin 1s linear infinite;
-margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
-}
-
-.alert {
-padding: 1rem;
-border-radius: 8px;
-margin-top: 1rem;
-}
-
-.alert-success {
-background: #c6f6d5;
-color: #22543d;
-border-left: 4px solid #38a169;
-}
-
-.alert-error {
-background: #fed7d7;
-color: #742a2a;
-border-left: 4px solid #e53e3e;
-}
-
-.alert-info {
-background: #bee3f8;
-color: #2c5282;
-border-left: 4px solid #3182ce;
-}
+/* ============================================================
+   FEATURE BOXES
+   ============================================================ */
 
 .feature-boxes {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 .feature-box {
-background: white;
-padding: 2rem;
-border-radius: 12px;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-text-align: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 .feature-icon {
-font-size: 2.5rem;
-margin-bottom: 1rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 .feature-box h4 {
-color: #2d3748;
-margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
 }
 
 .feature-box p {
-color: #718096;
-margin: 0;
+  color: #718096;
+  margin: 0;
+  font-size: 0.95rem;
 }
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
 
 @media (max-width: 768px) {
-.page-container {
+  .page-container {
     padding: 1rem;
-}
+  }
 
-.file-header {
+  .page-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .content-card {
+    padding: 1.5rem;
+  }
+
+  .file-item {
+    padding: 1rem;
+  }
+
+  .file-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-}
+  }
 
-.file-actions {
+  .file-actions {
     width: 100%;
-    justify-content: space-between;
-}
+    justify-content: flex-end;
+  }
 
-.action-section {
+  .file-meta {
     flex-direction: column;
-}
-
-.btn {
-    width: 100%;
-}
+    gap: 0.25rem;
+  }
 }
