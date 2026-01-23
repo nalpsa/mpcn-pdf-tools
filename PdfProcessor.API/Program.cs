@@ -11,17 +11,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Registrar serviços do PDF Processor
+// Registrar serviÃ§os do PDF Processor
 builder.Services.AddScoped<IPdfRotateService, PdfRotateService>();
 builder.Services.AddScoped<IPdfCompressService, PdfCompressService>();
 builder.Services.AddScoped<IPdfMergeService, PdfMergeService>();
+builder.Services.AddScoped<IPdfEditService, PdfEditService>(); // âœ… ADICIONADO
 builder.Services.AddScoped<IItauMovimentacaoParser, ItauMovimentacaoParser>();
 builder.Services.AddScoped<IItauCashParser, ItauCashParser>();
 builder.Services.AddScoped<IBtgParser, BtgParser>();
 builder.Services.AddScoped<IUbsParser, UbsParser>();
 builder.Services.AddScoped<IMorganStanleyParser, MorganStanleyParser>();
 
-// ✅ CORS DINÂMICO: Aceita qualquer rede local + localhost
+// âœ… CORS DINÃ‚MICO: Aceita qualquer rede local + localhost
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor", policy =>
@@ -33,11 +34,11 @@ builder.Services.AddCors(options =>
             {
                 var host = uri.Host;
 
-                // ✅ Permitir localhost
+                // âœ… Permitir localhost
                 if (host == "localhost" || host == "127.0.0.1")
                     return true;
 
-                // ✅ Permitir IPs de rede local (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+                // âœ… Permitir IPs de rede local (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
                 if (System.Net.IPAddress.TryParse(host, out var ip))
                 {
                     var bytes = ip.GetAddressBytes();
@@ -75,7 +76,7 @@ if (app.Environment.IsDevelopment())
 // Comentado para aceitar HTTP
 // app.UseHttpsRedirection();
 
-// ✅ IMPORTANTE: CORS deve vir ANTES de MapControllers
+// âœ… IMPORTANTE: CORS deve vir ANTES de MapControllers
 app.UseCors("AllowBlazor");
 
 // Mapear controllers

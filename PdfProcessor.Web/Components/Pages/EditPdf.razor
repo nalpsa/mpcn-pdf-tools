@@ -1,0 +1,116 @@
+@page "/edit-pdf"
+@page "/editar"
+
+<PageTitle>Editar PDF - PDF Processor</PageTitle>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-icon">✂️</div>
+    <div>
+      <h1>Editar PDF</h1>
+      <p class="subtitle">Rotacione e remova páginas individualmente</p>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="info-box info">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <strong>Como funciona:</strong>
+        <ul>
+          <li>Selecione <strong>um único arquivo PDF</strong></li>
+          <li>Visualize miniaturas de todas as páginas</li>
+          <li>Rotacione páginas individuais (↶ ↷)</li>
+          <li>Marque páginas para remoção (🗑️)</li>
+          <li>Faça download do PDF editado</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <!-- ✅ Upload via sistema compartilhado -->
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Clique aqui ou arraste um PDF</div>
+        <div class="upload-hint">Selecione apenas um arquivo PDF (máx. 16MB)</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden-file-input" accept=".pdf" />
+    </div>
+
+    <!-- Informações do arquivo carregado -->
+    <div id="fileInfoContainer" style="display: none;"></div>
+
+    <!-- Loading -->
+    <div id="loadingIndicator" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p id="loadingText">Carregando páginas...</p>
+    </div>
+
+    <!-- Mensagem de status -->
+    <div id="statusMessage" class="alert" style="display: none;"></div>
+  </div>
+
+  <!-- Grid de páginas (aparece após carregar) -->
+  <div id="pagesSection" class="pages-section" style="display: none;">
+    
+    <!-- Estatísticas -->
+    <div class="action-section">
+      <div class="action-stats" id="actionStats"></div>
+    </div>
+
+    <!-- Grid de páginas -->
+    <div class="pages-grid" id="pagesGrid"></div>
+
+    <!-- Botões de ação -->
+    <div class="action-section">
+      <button class="btn btn-primary" id="downloadBtn" onclick="downloadEditedPdf()" disabled>
+        📥 Download PDF
+      </button>
+      <button class="btn btn-secondary" onclick="resetRotations()">
+        🔄 Resetar Rotações
+      </button>
+      <button class="btn btn-secondary" onclick="resetDeletions()">
+        ↩️ Restaurar Todas
+      </button>
+      <button class="btn btn-danger" onclick="resetAll()">
+        🗑️ Limpar Tudo
+      </button>
+    </div>
+  </div>
+
+  <div class="feature-boxes">
+    <div class="feature-box">
+      <div class="feature-icon">🔄</div>
+      <h4>Rotação por Página</h4>
+      <p>Rotacione apenas as páginas que precisa</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">✂️</div>
+      <h4>Remoção Seletiva</h4>
+      <p>Delete páginas indesejadas facilmente</p>
+    </div>
+    <div class="feature-box">
+      <div class="feature-icon">👁️</div>
+      <h4>Preview Visual</h4>
+      <p>Veja as mudanças em tempo real</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     CSS - Ordem crítica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/edit-pdf.css" />
+
+<!-- ========================================
+     JavaScript - Ordem crítica
+     ======================================== -->
+<!-- 1. Configuração da API -->
+<script src="/js/api-config.js"></script>
+
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. Lógica específica do Edit PDF -->
+<script src="/js/edit-pdf.js"></script>
