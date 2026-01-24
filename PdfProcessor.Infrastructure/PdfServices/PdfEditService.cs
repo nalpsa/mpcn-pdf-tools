@@ -1,7 +1,12 @@
 using PdfProcessor.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-using iText.Kernel.Pdf;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.IO;
 using System.Text;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using Docnet.Core;
 
 namespace PdfProcessor.Infrastructure.PdfServices;
 
@@ -22,25 +27,49 @@ public class PdfEditService : IPdfEditService
       {
         pdfStream.Position = 0;
 
-        using var pdfDoc = new PdfDocument(new PdfReader(pdfStream));
-
-        if (pageNumber < 1 || pageNumber > pdfDoc.GetNumberOfPages())
+        // Copiar stream para array de bytes (Docnet precisa de byte[])
+        byte[] pdfBytes;
+        using (var ms = new MemoryStream())
         {
-          throw new ArgumentException($"Página {pageNumber} inválida. PDF tem {pdfDoc.GetNumberOfPages()} páginas.");
+          pdfStream.CopyTo(ms);
+          pdfBytes = ms.ToArray();
         }
 
-        var page = pdfDoc.GetPage(pageNumber);
-        var pageSize = page.GetPageSize();
+        // Usar Docnet.Core para renderizar a página específica
+        using var library = DocLib.Instance;
+        using var docReader = library.GetDocReader(pdfBytes, new Docnet.Core.Models.PageDimensions(1024, 1024));
 
+        if (docReader.GetPageCount() < pageNumber)
+        {
+          throw new ArgumentException($"Página {pageNumber} inválida. PDF tem {docReader.GetPageCount()} páginas.");
+        }
+
+        // Renderizar página (pageNumber - 1 porque Docnet usa índice 0-based)
+        using var pageReader = docReader.GetPageReader(pageNumber - 1);
+        var rawBytes = pageReader.GetImage();
+        var pageWidth = pageReader.GetPageWidth();
+        var pageHeight = pageReader.GetPageHeight();
+
+        // Converter raw bytes para imagem usando ImageSharp
+        using var image = Image.LoadPixelData<Bgra32>(rawBytes, pageWidth, pageHeight);
+
+        // Calcular dimensões proporcionais
         var width = maxWidth;
-        var height = (int)(pageSize.GetHeight() / pageSize.GetWidth() * maxWidth);
+        var height = (int)((double)pageHeight / pageWidth * maxWidth);
 
-        var svg = GenerateSvgThumbnail(pageNumber, width, height, pageSize);
+        // Redimensionar mantendo proporção
+        image.Mutate(x => x.Resize(new ResizeOptions
+        {
+          Size = new Size(width, height),
+          Mode = ResizeMode.Max
+        }));
 
-        var svgBytes = Encoding.UTF8.GetBytes(svg);
-        var base64 = Convert.ToBase64String(svgBytes);
+        // Converter para PNG em base64
+        using var outputStream = new MemoryStream();
+        image.SaveAsPng(outputStream);
+        var base64 = Convert.ToBase64String(outputStream.ToArray());
 
-        return $"data:image/svg+xml;base64,{base64}";
+        return $"data:image/png;base64,{base64}";
       }
       catch (Exception ex)
       {
@@ -50,38 +79,33 @@ public class PdfEditService : IPdfEditService
     });
   }
 
-  private string GenerateSvgThumbnail(int pageNumber, int width, int height, iText.Kernel.Geom.Rectangle pageSize)
-  {
-    var orientation = pageSize.GetWidth() > pageSize.GetHeight() ? "Paisagem" : "Retrato";
-    var iconX = width / 2 - 30;
-    var iconY = height / 2 - 70;
-
-    return $@"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>
-  <rect width='100%' height='100%' fill='white' stroke='#cbd5e0' stroke-width='2' rx='4'/>
-  <rect width='100%' height='10' fill='#667eea' opacity='0.9' rx='4'/>
-  <g transform='translate({iconX}, {iconY})'>
-    <rect x='0' y='0' width='60' height='80' fill='#e2e8f0' stroke='#a0aec0' stroke-width='2' rx='2'/>
-    <polygon points='60,0 60,15 45,0' fill='#cbd5e0' stroke='#a0aec0' stroke-width='1'/>
-    <line x1='10' y1='25' x2='50' y2='25' stroke='#718096' stroke-width='2' stroke-linecap='round'/>
-    <line x1='10' y1='35' x2='50' y2='35' stroke='#718096' stroke-width='2' stroke-linecap='round'/>
-    <line x1='10' y1='45' x2='40' y2='45' stroke='#718096' stroke-width='2' stroke-linecap='round'/>
-  </g>
-  <text x='50%' y='{height - 60}' font-family='system-ui, -apple-system, sans-serif' font-size='24' font-weight='bold' fill='#2d3748' text-anchor='middle' dominant-baseline='middle'>Página {pageNumber}</text>
-  <text x='50%' y='{height - 35}' font-family='system-ui, -apple-system, sans-serif' font-size='11' fill='#718096' text-anchor='middle' dominant-baseline='middle'>{pageSize.GetWidth():F0} × {pageSize.GetHeight():F0} pts</text>
-  <text x='50%' y='{height - 20}' font-family='system-ui, -apple-system, sans-serif' font-size='10' fill='#a0aec0' text-anchor='middle' dominant-baseline='middle'>{orientation}</text>
-</svg>";
-  }
-
   private string GenerateErrorThumbnail(int pageNumber)
   {
-    var svg = $@"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='250'>
+    try
+    {
+      // Criar imagem de erro 200x250
+      using var image = new Image<Rgba32>(200, 250);
+      
+      image.Mutate(x => x.BackgroundColor(Color.FromRgb(255, 245, 245)));
+
+      using var outputStream = new MemoryStream();
+      image.SaveAsPng(outputStream);
+      var base64 = Convert.ToBase64String(outputStream.ToArray());
+
+      return $"data:image/png;base64,{base64}";
+    }
+    catch
+    {
+      // Fallback para SVG se ImageSharp falhar
+      var svg = $@"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='250'>
   <rect width='100%' height='100%' fill='#fff5f5' stroke='#fc8181' stroke-width='2' rx='4'/>
   <text x='50%' y='50%' font-family='system-ui' font-size='16' fill='#e53e3e' text-anchor='middle'>Erro ao carregar</text>
   <text x='50%' y='65%' font-family='system-ui' font-size='12' fill='#fc8181' text-anchor='middle'>Página {pageNumber}</text>
 </svg>";
 
-    var svgBytes = Encoding.UTF8.GetBytes(svg);
-    return $"data:image/svg+xml;base64,{Convert.ToBase64String(svgBytes)}";
+      var svgBytes = Encoding.UTF8.GetBytes(svg);
+      return $"data:image/svg+xml;base64,{Convert.ToBase64String(svgBytes)}";
+    }
   }
 
   public async Task<int> GetPageCountAsync(Stream pdfStream)
@@ -91,8 +115,8 @@ public class PdfEditService : IPdfEditService
       try
       {
         pdfStream.Position = 0;
-        using var pdfDoc = new PdfDocument(new PdfReader(pdfStream));
-        var count = pdfDoc.GetNumberOfPages();
+        using var pdfDoc = PdfReader.Open(pdfStream, PdfDocumentOpenMode.Import);
+        var count = pdfDoc.PageCount;
 
         _logger.LogInformation("📊 PDF tem {PageCount} páginas", count);
 
@@ -119,8 +143,8 @@ public class PdfEditService : IPdfEditService
       {
         pdfStream.Position = 0;
 
-        using var inputPdfDoc = new PdfDocument(new PdfReader(pdfStream));
-        result.OriginalPageCount = inputPdfDoc.GetNumberOfPages();
+        using var inputPdfDoc = PdfReader.Open(pdfStream, PdfDocumentOpenMode.Import);
+        result.OriginalPageCount = inputPdfDoc.PageCount;
 
         _logger.LogInformation("📝 Editando PDF: {FileName} ({PageCount} páginas)",
                 originalFileName, result.OriginalPageCount);
@@ -128,59 +152,53 @@ public class PdfEditService : IPdfEditService
         int pagesRotated = 0;
         int pagesKept = 0;
 
-        // Criar MemoryStream que NÃO será fechado pelo writer
-        var outputStream = new MemoryStream();
+        using var outputPdfDoc = new PdfDocument();
 
-        // Usar using aninhados COM SetCloseStream(false)
-        using (var writer = new PdfWriter(outputStream))
+        foreach (var operation in pageOperations.OrderBy(o => o.PageNumber))
         {
-          // CRÍTICO: Não fechar o stream quando writer for disposed
-          writer.SetCloseStream(false);
-
-          using (var outputPdfDoc = new PdfDocument(writer))
+          if (operation.PageNumber < 1 || operation.PageNumber > result.OriginalPageCount)
           {
-            foreach (var operation in pageOperations.OrderBy(o => o.PageNumber))
-            {
-              if (operation.PageNumber < 1 || operation.PageNumber > result.OriginalPageCount)
-              {
-                _logger.LogWarning("⚠️ Página {PageNumber} inválida, ignorando", operation.PageNumber);
-                continue;
-              }
+            _logger.LogWarning("⚠️ Página {PageNumber} inválida, ignorando", operation.PageNumber);
+            continue;
+          }
 
-              if (!operation.Keep)
-              {
-                _logger.LogDebug("🗑️ Removendo página {PageNumber}", operation.PageNumber);
-                continue;
-              }
+          if (!operation.Keep)
+          {
+            _logger.LogDebug("🗑️ Removendo página {PageNumber}", operation.PageNumber);
+            continue;
+          }
 
-              var sourcePage = inputPdfDoc.GetPage(operation.PageNumber);
-              var copiedPage = sourcePage.CopyTo(outputPdfDoc);
+          // COPIAR PÁGINA (PdfSharp usa índice 0-based)
+          var sourcePage = inputPdfDoc.Pages[operation.PageNumber - 1];
+          var copiedPage = outputPdfDoc.AddPage(sourcePage);
 
-              if (operation.Rotation != 0)
-              {
-                var currentRotation = copiedPage.GetRotation();
-                var newRotation = (currentRotation + operation.Rotation) % 360;
+          // APLICAR ROTAÇÃO
+          if (operation.Rotation != 0)
+          {
+            var currentRotation = (int)copiedPage.Rotate;
+            var newRotation = (currentRotation + operation.Rotation) % 360;
 
-                if (newRotation < 0) newRotation += 360;
+            if (newRotation < 0) newRotation += 360;
 
-                copiedPage.SetRotation(newRotation);
-                pagesRotated++;
+            copiedPage.Rotate = newRotation;
+            pagesRotated++;
 
-                _logger.LogDebug("🔄 Página {PageNumber}: {Current}° → {New}°",
-                        operation.PageNumber, currentRotation, newRotation);
-              }
+            _logger.LogDebug("🔄 Página {PageNumber}: {Current}° → {New}°",
+                    operation.PageNumber, currentRotation, newRotation);
+          }
 
-              pagesKept++;
-            }
-          } // outputPdfDoc é fechado aqui
-        } // writer é fechado aqui (mas NÃO fecha o stream)
+          pagesKept++;
+        }
 
-        // AGORA o stream ainda está aberto e podemos acessá-lo
-        outputStream.Position = 0;
-        result.ProcessedPdfData = outputStream.ToArray();
+        if (outputPdfDoc.PageCount == 0)
+        {
+          throw new InvalidOperationException("Nenhuma página foi adicionada ao PDF editado");
+        }
 
-        // Agora sim podemos fechar o stream
-        outputStream.Dispose();
+        // SALVAR PDF
+        using var ms = new MemoryStream();
+        outputPdfDoc.Save(ms, false);
+        result.ProcessedPdfData = ms.ToArray();
 
         result.FinalPageCount = pagesKept;
         result.PagesRotated = pagesRotated;
