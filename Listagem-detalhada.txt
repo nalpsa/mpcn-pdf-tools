@@ -5,6 +5,7 @@
 |   |   |-- BtgController.cs
 |   |   |-- CompressPdfController.cs
 |   |   |-- EditPdfController.cs
+|   |   |-- ItauCash2Controller.cs
 |   |   |-- ItauCashController.cs
 |   |   |-- ItauMovimentacaoController.cs
 |   |   |-- MergePdfController.cs
@@ -39,6 +40,7 @@
 |   |   |-- IBankParser.cs
 |   |   |-- IBtgParser.cs
 |   |   |-- IExcelGeneratorService.cs
+|   |   |-- IItauCash2Parser.cs
 |   |   |-- IItauCashParser.cs
 |   |   |-- IItauMovimentacaoParser.cs
 |   |   |-- IMorganStanleyParser.cs
@@ -49,6 +51,7 @@
 |   |   -- IUbsParser.cs
 |   |-- Models
 |   |   |-- BtgTransaction.cs
+|   |   |-- ItauCash2Transaction.cs
 |   |   |-- ItauCashTransaction.cs
 |   |   |-- ItauTransaction.cs
 |   |   |-- MorganStanleyTransaction.cs
@@ -58,6 +61,7 @@
 |-- PdfProcessor.Infrastructure
 |   |-- Parsers
 |   |   |-- BtgParser.cs
+|   |   |-- ItauCash2Parser.cs
 |   |   |-- ItauCashParser.cs
 |   |   |-- ItauMovimentacaoParser.cs
 |   |   |-- MorganStanleyParser.cs
@@ -92,6 +96,7 @@
 |   |   |   |-- Error.razor
 |   |   |   |-- Help.razor
 |   |   |   |-- ItauCash.razor
+|   |   |   |-- ItauCash2.razor
 |   |   |   |-- ItauMovimentacao.razor
 |   |   |   |-- MergePdf.razor
 |   |   |   |-- MorganStanley.razor
@@ -111,6 +116,7 @@
 |   |   |   |-- dashboard.css
 |   |   |   |-- edit-pdf.css
 |   |   |   |-- itau-cash.css
+|   |   |   |-- itau-cash2.css
 |   |   |   |-- itau-movimentacao.css
 |   |   |   |-- merge-pdf.css
 |   |   |   |-- morgan-stanley.css
@@ -124,6 +130,7 @@
 |   |   |   |-- compress-pdf.js
 |   |   |   |-- edit-pdf.js
 |   |   |   |-- itau-cash.js
+|   |   |   |-- itau-cash2.js
 |   |   |   |-- itau-movimentacao.js
 |   |   |   |-- merge-pdf.js
 |   |   |   |-- morgan-stanley.js
@@ -137,13 +144,11 @@
 |   |-- PdfProcessor.Web.csproj
 |   -- Program.cs
 |-- .gitignore
-|-- diagnostico.sh
 |-- gerar-listagem.ps1
 |-- gerar-listagem.sh
 |-- Listagem-detalhada.txt
 |-- PdfProcesor.sln
-|-- README.md
--- rebuild_forcado.sh
+-- README.md
 
 ==============================
 CONTEÃšDO DOS ARQUIVOS
@@ -642,87 +647,6 @@ yarn.lock
 
 
 ----------------------------------------
-Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\diagnostico.sh
-----------------------------------------
-
-#!/bin/bash
-
-echo "ðŸ” DIAGNÃ“STICO - Edit PDF Service"
-echo "=================================="
-echo ""
-
-# 1. Verificar se o arquivo existe
-echo "1ï¸âƒ£ Verificando localizaÃ§Ã£o do PdfEditService.cs..."
-EDIT_SERVICE=$(find /PROJETOS/MPCN-SYSTEMS/mpcn-pdf-tools -name "PdfEditService.cs" 2>/dev/null | head -1)
-
-if [ -z "$EDIT_SERVICE" ]; then
-  echo "âŒ Arquivo PdfEditService.cs NÃƒO ENCONTRADO!"
-  echo ""
-  echo "ðŸ“ Estrutura do projeto:"
-  find /PROJETOS/MPCN-SYSTEMS/mpcn-pdf-tools -type d -name "PdfServices" 2>/dev/null
-  exit 1
-fi
-
-echo "âœ… Arquivo encontrado: $EDIT_SERVICE"
-echo ""
-
-# 2. Verificar se tem a correÃ§Ã£o aplicada
-echo "2ï¸âƒ£ Verificando se correÃ§Ã£o foi aplicada..."
-if grep -q "CORREÃ‡ÃƒO CRÃTICA" "$EDIT_SERVICE"; then
-  echo "âœ… CorreÃ§Ã£o aplicada (comentÃ¡rio encontrado)"
-else
-  echo "âŒ CorreÃ§Ã£o NÃƒO aplicada"
-fi
-echo ""
-
-# 3. Verificar a ordem do Close vs ToArray
-echo "3ï¸âƒ£ Verificando ordem Close() vs ToArray()..."
-CLOSE_LINE=$(grep -n "outputPdfDoc.Close()" "$EDIT_SERVICE" | cut -d: -f1)
-ARRAY_LINE=$(grep -n "outputStream.ToArray()" "$EDIT_SERVICE" | cut -d: -f1)
-
-if [ -n "$CLOSE_LINE" ] && [ -n "$ARRAY_LINE" ]; then
-  if [ "$CLOSE_LINE" -lt "$ARRAY_LINE" ]; then
-    echo "âœ… CORRETO: Close() na linha $CLOSE_LINE vem ANTES de ToArray() na linha $ARRAY_LINE"
-  else
-    echo "âŒ ERRADO: ToArray() vem antes de Close()"
-    echo "   Close() estÃ¡ na linha $CLOSE_LINE"
-    echo "   ToArray() estÃ¡ na linha $ARRAY_LINE"
-  fi
-else
-  echo "âš ï¸  NÃ£o foi possÃ­vel determinar as linhas"
-fi
-echo ""
-
-# 4. Mostrar trecho relevante
-echo "4ï¸âƒ£ Mostrando trecho do cÃ³digo (linhas 195-205):"
-echo "----------------------------------------"
-sed -n '195,205p' "$EDIT_SERVICE"
-echo "----------------------------------------"
-echo ""
-
-# 5. Verificar se Program.cs registra o serviÃ§o
-echo "5ï¸âƒ£ Verificando registro no Program.cs..."
-PROGRAM_CS=$(find /PROJETOS/MPCN-SYSTEMS/mpcn-pdf-tools -name "Program.cs" -path "*/PdfProcessor.API/*" 2>/dev/null | head -1)
-
-if [ -n "$PROGRAM_CS" ]; then
-  if grep -q "IPdfEditService" "$PROGRAM_CS"; then
-    echo "âœ… IPdfEditService estÃ¡ registrado no Program.cs"
-  else
-    echo "âŒ IPdfEditService NÃƒO estÃ¡ registrado no Program.cs"
-    echo "   Adicione esta linha:"
-    echo "   builder.Services.AddScoped<IPdfEditService, PdfEditService>();"
-  fi
-else
-  echo "âš ï¸  Program.cs nÃ£o encontrado"
-fi
-echo ""
-
-echo "=================================="
-echo "âœ… DiagnÃ³stico concluÃ­do!"
-
-
-
-----------------------------------------
 Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcesor.sln
 ----------------------------------------
 
@@ -784,116 +708,6 @@ Global
 		{C1C90B91-8986-49E1-8209-21741FCB7639}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
-
-
-
-----------------------------------------
-Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\rebuild_forcado.sh
-----------------------------------------
-
-#!/bin/bash
-
-echo "================================================"
-echo "ðŸ”¥ REBUILD FORÃ‡ADO COMPLETO - PDF PROCESSOR"
-echo "================================================"
-echo ""
-
-# Encontrar o diretÃ³rio do projeto
-PROJECT_ROOT=$(find /PROJETOS -type d -name "mpcn-pdf-tools" 2>/dev/null | head -1)
-
-if [ -z "$PROJECT_ROOT" ]; then
-  PROJECT_ROOT="/PROJETOS/MPCN-SYSTEMS/mpcn-pdf-tools"
-fi
-
-if [ ! -d "$PROJECT_ROOT" ]; then
-  echo "âŒ DiretÃ³rio do projeto nÃ£o encontrado!"
-  echo "   Tentei: $PROJECT_ROOT"
-  exit 1
-fi
-
-echo "ðŸ“ Projeto encontrado: $PROJECT_ROOT"
-cd "$PROJECT_ROOT" || exit 1
-echo ""
-
-# 1. MATAR TODOS OS PROCESSOS
-echo "1ï¸âƒ£ Matando TODOS os processos dotnet do projeto..."
-pkill -9 -f "dotnet.*PdfProcessor" 2>/dev/null
-pkill -9 -f "PdfProcessor.API" 2>/dev/null
-pkill -9 -f "PdfProcessor.Web" 2>/dev/null
-sleep 3
-echo "   âœ… Processos encerrados"
-echo ""
-
-# 2. LIMPAR TODOS OS BIN E OBJ
-echo "2ï¸âƒ£ Removendo TODOS os diretÃ³rios bin/ e obj/..."
-find . -type d -name "bin" -exec rm -rf {} + 2>/dev/null
-find . -type d -name "obj" -exec rm -rf {} + 2>/dev/null
-echo "   âœ… DiretÃ³rios removidos"
-echo ""
-
-# 3. LIMPAR CACHE DO NUGET
-echo "3ï¸âƒ£ Limpando cache do NuGet..."
-dotnet nuget locals all --clear
-echo "   âœ… Cache limpo"
-echo ""
-
-# 4. RESTAURAR PACOTES
-echo "4ï¸âƒ£ Restaurando pacotes..."
-dotnet restore --force
-if [ $? -ne 0 ]; then
-  echo "   âŒ Erro ao restaurar pacotes!"
-  exit 1
-fi
-echo "   âœ… Pacotes restaurados"
-echo ""
-
-# 5. CLEAN
-echo "5ï¸âƒ£ Executando dotnet clean..."
-dotnet clean
-echo "   âœ… Clean concluÃ­do"
-echo ""
-
-# 6. BUILD FORÃ‡ADO (SEM CACHE)
-echo "6ï¸âƒ£ Compilando projeto (forÃ§ado, sem incremental)..."
-dotnet build --no-incremental --force --no-cache
-if [ $? -ne 0 ]; then
-  echo "   âŒ Erro na compilaÃ§Ã£o!"
-  exit 1
-fi
-echo "   âœ… CompilaÃ§Ã£o bem-sucedida!"
-echo ""
-
-# 7. VERIFICAR SE O ARQUIVO FOI COMPILADO
-echo "7ï¸âƒ£ Verificando DLL compilada..."
-DLL_PATH=$(find . -name "PdfProcessor.Infrastructure.dll" -path "*/bin/*" | head -1)
-if [ -n "$DLL_PATH" ]; then
-  DLL_DATE=$(stat -c %y "$DLL_PATH" 2>/dev/null || stat -f "%Sm" "$DLL_PATH" 2>/dev/null)
-  echo "   âœ… DLL encontrada: $DLL_PATH"
-  echo "   ðŸ“… Data: $DLL_DATE"
-else
-  echo "   âš ï¸  DLL nÃ£o encontrada!"
-fi
-echo ""
-
-echo "================================================"
-echo "âœ… REBUILD COMPLETO CONCLUÃDO!"
-echo "================================================"
-echo ""
-echo "ðŸ“ PRÃ“XIMOS PASSOS:"
-echo ""
-echo "   1. Abrir NOVO terminal e executar:"
-echo "      cd $PROJECT_ROOT/PdfProcessor.API"
-echo "      dotnet run"
-echo ""
-echo "   2. Abrir OUTRO NOVO terminal e executar:"
-echo "      cd $PROJECT_ROOT/PdfProcessor.Web"
-echo "      dotnet run"
-echo ""
-echo "   3. Testar no navegador"
-echo ""
-echo "âš ï¸  IMPORTANTE: Use NOVOS terminais para garantir"
-echo "   que nÃ£o hÃ¡ variÃ¡veis de ambiente antigas!"
-echo ""
 
 
 
@@ -996,6 +810,7 @@ builder.Services.AddScoped<IItauCashParser, ItauCashParser>();
 builder.Services.AddScoped<IBtgParser, BtgParser>();
 builder.Services.AddScoped<IUbsParser, UbsParser>();
 builder.Services.AddScoped<IMorganStanleyParser, MorganStanleyParser>();
+builder.Services.AddScoped<IItauCash2Parser, ItauCash2Parser>();
 
 // Ã¢Å“â€¦ CORS DINÃƒâ€šMICO: Aceita qualquer rede local + localhost
 builder.Services.AddCors(options =>
@@ -1595,6 +1410,86 @@ public class EditPdfController : ControllerBase
     });
   }
 }
+
+
+----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.API\Controllers\ItauCash2Controller.cs
+----------------------------------------
+
+using Microsoft.AspNetCore.Mvc;
+using PdfProcessor.Core.Interfaces;
+
+namespace PdfProcessor.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ItauCash2Controller : ControllerBase
+{
+    private readonly IItauCash2Parser _parser;
+    private readonly ILogger<ItauCash2Controller> _logger;
+
+    public ItauCash2Controller(IItauCash2Parser parser, ILogger<ItauCash2Controller> logger)
+    {
+        _parser = parser;
+        _logger = logger;
+    }
+
+    [HttpPost("process")]
+    public async Task<IActionResult> ProcessPdfs([FromForm] IFormFileCollection files, [FromForm] bool debugMode = false)
+    {
+        try
+        {
+            if (files == null || files.Count == 0)
+            {
+                _logger.LogWarning("âš ï¸ Nenhum arquivo recebido");
+                return BadRequest(new { error = "Nenhum arquivo foi enviado" });
+            }
+
+            _logger.LogInformation($"ðŸ“¥ Recebidos {files.Count} arquivo(s) - Debug: {debugMode}");
+
+            var streams = new List<Stream>();
+
+            foreach (var file in files)
+            {
+                if (file.Length == 0)
+                    continue;
+
+                var stream = new MemoryStream();
+                await file.CopyToAsync(stream);
+                stream.Position = 0;
+                streams.Add(stream);
+
+                _logger.LogInformation($"  ðŸ“„ {file.FileName} ({file.Length} bytes)");
+            }
+
+            if (streams.Count == 0)
+            {
+                return BadRequest(new { error = "Nenhum arquivo vÃ¡lido foi enviado" });
+            }
+
+            var excelBytes = await _parser.ProcessBatchAsync(streams, debugMode);
+
+            foreach (var stream in streams)
+            {
+                stream.Dispose();
+            }
+
+            var fileName = debugMode 
+                ? $"ItauCash2_DEBUG_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+                : $"ItauCash2_Transacoes_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+            _logger.LogInformation($"âœ… Processamento concluÃ­do: {fileName}");
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "âŒ Erro ao processar PDFs ItaÃº Cash 2");
+            return StatusCode(500, new { error = $"Erro ao processar arquivos: {ex.Message}" });
+        }
+    }
+}
+
 
 
 ----------------------------------------
@@ -3465,6 +3360,20 @@ public class ExcelSheetOptions
 
 
 ----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Core\Interfaces\IItauCash2Parser.cs
+----------------------------------------
+
+using PdfProcessor.Core.Models;
+
+namespace PdfProcessor.Core.Interfaces;
+
+public interface IItauCash2Parser
+{
+    Task<byte[]> ProcessBatchAsync(List<Stream> pdfStreams, bool debugMode = false);
+}
+
+
+----------------------------------------
 Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Core\Interfaces\IItauCashParser.cs
 ----------------------------------------
 
@@ -3813,6 +3722,22 @@ public class BtgTransaction
     public string AccruedInterest { get; set; } = string.Empty;
     public string Amount { get; set; } = string.Empty;
     public string Currency { get; set; } = string.Empty;
+}
+
+
+----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Core\Models\ItauCash2Transaction.cs
+----------------------------------------
+
+namespace PdfProcessor.Core.Models;
+
+public class ItauCash2Transaction
+{
+    public string OperationDate { get; set; } = "";
+    public string ValueDate { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Value { get; set; } = "";
+    public string AccountBalance { get; set; } = "";
 }
 
 
@@ -4220,6 +4145,427 @@ public class BtgParser : IBtgParser
         }
     }
 }
+
+
+----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Infrastructure\Parsers\ItauCash2Parser.cs
+----------------------------------------
+
+using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf.Canvas.Parser.Listener;
+using ClosedXML.Excel;
+using System.Text;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using PdfProcessor.Core.Interfaces;
+using PdfProcessor.Core.Models;
+
+namespace PdfProcessor.Infrastructure.Parsers;
+
+public class ItauCash2Parser : IItauCash2Parser
+{
+    private readonly ILogger<ItauCash2Parser> _logger;
+
+    // ðŸ”§ COORDENADAS - SerÃ£o ajustadas apÃ³s anÃ¡lise do modo DEBUG
+    private const float OPERATION_DATE_X_MIN = 0f;
+    private const float OPERATION_DATE_X_MAX = 100f;
+    
+    private const float VALUE_DATE_X_MIN = 100f;
+    private const float VALUE_DATE_X_MAX = 180f;
+    
+    private const float DESCRIPTION_X_MIN = 180f;
+    private const float DESCRIPTION_X_MAX = 450f;
+    
+    private const float VALUE_X_MIN = 450f;
+    private const float VALUE_X_MAX = 530f;
+    
+    private const float BALANCE_X_MIN = 530f;
+    private const float BALANCE_X_MAX = 650f;
+
+    public ItauCash2Parser(ILogger<ItauCash2Parser> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<byte[]> ProcessBatchAsync(List<Stream> pdfStreams, bool debugMode = false)
+    {
+        _logger.LogInformation($"ðŸ¦ Processando {pdfStreams.Count} PDF(s) ItaÃº Cash 2.0 - Modo: {(debugMode ? "DEBUG" : "PRODUÃ‡ÃƒO")}");
+
+        if (debugMode)
+        {
+            return await GenerateDebugReportAsync(pdfStreams);
+        }
+
+        // MODO PRODUÃ‡ÃƒO
+        var allAccountsData = new Dictionary<string, List<ItauCash2Transaction>>();
+
+        for (int i = 0; i < pdfStreams.Count; i++)
+        {
+            _logger.LogInformation($"ðŸ“„ PDF {i + 1}/{pdfStreams.Count}");
+
+            var accounts = await ExtractTransactionsAsync(pdfStreams[i]);
+
+            foreach (var (accountId, transactions) in accounts)
+            {
+                if (!allAccountsData.ContainsKey(accountId))
+                    allAccountsData[accountId] = new List<ItauCash2Transaction>();
+
+                allAccountsData[accountId].AddRange(transactions);
+                _logger.LogInformation($"  ðŸ¦ {accountId}: {transactions.Count} transaÃ§Ã£o(Ãµes)");
+            }
+        }
+
+        _logger.LogInformation($"âœ… Total: {allAccountsData.Count} conta(s), {allAccountsData.Sum(x => x.Value.Count)} transaÃ§Ã£o(Ãµes)");
+
+        return await CreateExcelAsync(allAccountsData);
+    }
+
+    private async Task<Dictionary<string, List<ItauCash2Transaction>>> ExtractTransactionsAsync(Stream pdfStream)
+    {
+        return await Task.Run(() =>
+        {
+            pdfStream.Position = 0;
+
+            using var pdfReader = new PdfReader(pdfStream);
+            using var pdfDocument = new PdfDocument(pdfReader);
+
+            var accountsData = new Dictionary<string, List<ItauCash2Transaction>>();
+            string? currentAccount = null;
+
+            for (int pageNum = 1; pageNum <= pdfDocument.GetNumberOfPages(); pageNum++)
+            {
+                var page = pdfDocument.GetPage(pageNum);
+                var pageText = PdfTextExtractor.GetTextFromPage(page);
+
+                if (!pageText.Contains("Cash Transactions"))
+                    continue;
+
+                _logger.LogInformation($"ðŸ“„ PÃ¡gina {pageNum}: Cash Transactions");
+
+                var strategy = new LocationTextExtractionStrategy();
+                PdfTextExtractor.GetTextFromPage(page, strategy);
+
+                var chunks = GetAllTextChunks(strategy);
+                var sortedChunks = chunks.OrderBy(c => -c.Y).ThenBy(c => c.X).ToList();
+
+                var lines = GroupChunksByLine(sortedChunks);
+
+                foreach (var line in lines)
+                {
+                    var lineText = string.Join(" ", line.Select(c => c.Text));
+
+                    // Detectar conta
+                    var accountMatch = Regex.Match(lineText, @"Opening Balance Account[:\s]*(\d+)\s*([A-Z]{3})", RegexOptions.IgnoreCase);
+                    if (accountMatch.Success)
+                    {
+                        currentAccount = $"{accountMatch.Groups[1].Value}_{accountMatch.Groups[2].Value}";
+                        _logger.LogInformation($"ðŸ¦ Conta: {currentAccount}");
+
+                        if (!accountsData.ContainsKey(currentAccount))
+                            accountsData[currentAccount] = new List<ItauCash2Transaction>();
+
+                        continue;
+                    }
+
+                    // Fim da conta
+                    if (lineText.Contains("Closing Balance"))
+                    {
+                        currentAccount = null;
+                        continue;
+                    }
+
+                    // Processar transaÃ§Ã£o
+                    if (currentAccount != null)
+                    {
+                        var transaction = ParseTransactionLine(line);
+                        if (transaction != null)
+                        {
+                            accountsData[currentAccount].Add(transaction);
+                        }
+                    }
+                }
+            }
+
+            return accountsData;
+        });
+    }
+
+    private ItauCash2Transaction? ParseTransactionLine(List<TextChunk> lineChunks)
+    {
+        var lineText = string.Join(" ", lineChunks.Select(c => c.Text));
+
+        // Filtrar headers
+        var headers = new[] { "Operation Date", "Value Date", "Description", "Value", "Account Balance", "Opening", "Closing" };
+        if (headers.Any(h => lineText.Contains(h, StringComparison.OrdinalIgnoreCase)))
+            return null;
+
+        // Buscar datas
+        var datePattern = @"\d{2}/\d{2}/\d{4}";
+        var dateChunks = lineChunks.Where(c => Regex.IsMatch(c.Text, datePattern)).ToList();
+
+        if (dateChunks.Count == 0)
+            return null;
+
+        // Extrair por posiÃ§Ã£o X
+        var operationDate = dateChunks.FirstOrDefault()?.Text ?? "";
+        var valueDate = dateChunks.Count > 1 ? dateChunks[1].Text : operationDate;
+
+        var descChunks = lineChunks.Where(c => c.X >= DESCRIPTION_X_MIN && c.X < DESCRIPTION_X_MAX).OrderBy(c => c.X);
+        var description = string.Join(" ", descChunks.Select(c => c.Text)).Trim();
+
+        // Valores monetÃ¡rios
+        var moneyPattern = @"-?\d{1,3}(?:,\d{3})*\.\d{2}";
+        var moneyChunks = lineChunks.Where(c => Regex.IsMatch(c.Text, moneyPattern) && c.X >= VALUE_X_MIN).OrderBy(c => c.X).ToList();
+
+        if (moneyChunks.Count < 2)
+            return null;
+
+        var value = moneyChunks[0].Text;
+        var balance = moneyChunks[1].Text;
+
+        if (string.IsNullOrWhiteSpace(description))
+            return null;
+
+        return new ItauCash2Transaction
+        {
+            OperationDate = operationDate,
+            ValueDate = valueDate,
+            Description = description,
+            Value = value,
+            AccountBalance = balance
+        };
+    }
+
+    private async Task<byte[]> GenerateDebugReportAsync(List<Stream> pdfStreams)
+    {
+        return await Task.Run(() =>
+        {
+            _logger.LogInformation("ðŸ” Gerando relatÃ³rio DEBUG");
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("DEBUG");
+
+            int row = 1;
+
+            worksheet.Cell(row, 1).Value = "ITAÃš CASH 2.0 - MODO DEBUG";
+            worksheet.Cell(row, 1).Style.Font.Bold = true;
+            worksheet.Cell(row, 1).Style.Font.FontSize = 16;
+            row += 2;
+
+            foreach (var pdfStream in pdfStreams)
+            {
+                pdfStream.Position = 0;
+
+                using var pdfReader = new PdfReader(pdfStream);
+                using var pdfDocument = new PdfDocument(pdfReader);
+
+                for (int pageNum = 1; pageNum <= pdfDocument.GetNumberOfPages(); pageNum++)
+                {
+                    var page = pdfDocument.GetPage(pageNum);
+                    var pageText = PdfTextExtractor.GetTextFromPage(page);
+
+                    if (!pageText.Contains("Cash Transactions"))
+                        continue;
+
+                    worksheet.Cell(row, 1).Value = $"PÃGINA {pageNum} - Cash Transactions";
+                    worksheet.Cell(row, 1).Style.Font.Bold = true;
+                    row += 2;
+
+                    // Headers
+                    worksheet.Cell(row, 1).Value = "X";
+                    worksheet.Cell(row, 2).Value = "Y";
+                    worksheet.Cell(row, 3).Value = "Texto";
+                    worksheet.Cell(row, 4).Value = "Tags";
+                    
+                    var headerRange = worksheet.Range(row, 1, row, 4);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    row++;
+
+                    var strategy = new LocationTextExtractionStrategy();
+                    PdfTextExtractor.GetTextFromPage(page, strategy);
+
+                    var chunks = GetAllTextChunks(strategy);
+                    var sortedChunks = chunks.OrderBy(c => -c.Y).ThenBy(c => c.X).ToList();
+
+                    bool inSection = false;
+                    foreach (var chunk in sortedChunks)
+                    {
+                        if (chunk.Text.Contains("Cash Transactions"))
+                            inSection = true;
+
+                        if (chunk.Text.Contains("Closing Balance"))
+                            break;
+
+                        if (!inSection)
+                            continue;
+
+                        var isDate = Regex.IsMatch(chunk.Text, @"\d{2}/\d{2}/\d{4}");
+                        var isMoney = Regex.IsMatch(chunk.Text, @"-?\d{1,3}(?:,\d{3})*\.\d{2}");
+
+                        var tags = new List<string>();
+                        if (isDate) tags.Add("DATA");
+                        if (isMoney) tags.Add("VALOR");
+
+                        worksheet.Cell(row, 1).Value = chunk.X;
+                        worksheet.Cell(row, 2).Value = chunk.Y;
+                        worksheet.Cell(row, 3).Value = chunk.Text;
+                        worksheet.Cell(row, 4).Value = string.Join(", ", tags);
+
+                        if (isDate || isMoney)
+                        {
+                            worksheet.Row(row).Style.Fill.BackgroundColor = XLColor.LightYellow;
+                        }
+
+                        row++;
+                    }
+
+                    row += 2;
+                }
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            _logger.LogInformation($"âœ… RelatÃ³rio DEBUG gerado: {row} linhas");
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        });
+    }
+
+    private async Task<byte[]> CreateExcelAsync(Dictionary<string, List<ItauCash2Transaction>> accountsData)
+    {
+        return await Task.Run(() =>
+        {
+            _logger.LogInformation("ðŸ“Š Criando Excel");
+
+            using var workbook = new XLWorkbook();
+
+            foreach (var (accountId, transactions) in accountsData)
+            {
+                if (transactions.Count == 0)
+                    continue;
+
+                var sheetName = accountId.Length > 31 ? accountId.Substring(0, 31) : accountId;
+                var worksheet = workbook.Worksheets.Add(sheetName);
+
+                worksheet.Cell(1, 1).Value = "Operation Date";
+                worksheet.Cell(1, 2).Value = "Value Date";
+                worksheet.Cell(1, 3).Value = "Description";
+                worksheet.Cell(1, 4).Value = "Value";
+                worksheet.Cell(1, 5).Value = "Account Balance";
+
+                var headerRange = worksheet.Range(1, 1, 1, 5);
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#FFA500");
+
+                for (int i = 0; i < transactions.Count; i++)
+                {
+                    var t = transactions[i];
+                    worksheet.Cell(i + 2, 1).Value = t.OperationDate;
+                    worksheet.Cell(i + 2, 2).Value = t.ValueDate;
+                    worksheet.Cell(i + 2, 3).Value = t.Description;
+                    worksheet.Cell(i + 2, 4).Value = t.Value;
+                    worksheet.Cell(i + 2, 5).Value = t.AccountBalance;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                _logger.LogInformation($"  âœ… {sheetName}: {transactions.Count} transaÃ§Ãµes");
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        });
+    }
+
+    // Helper methods
+    private List<TextChunk> GetAllTextChunks(LocationTextExtractionStrategy strategy)
+    {
+        var result = new List<TextChunk>();
+
+        var resultantTextType = strategy.GetType();
+        var locationalResultField = resultantTextType.GetField("locationalResult",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (locationalResultField == null)
+            return result;
+
+        var locationalResult = locationalResultField.GetValue(strategy);
+        if (locationalResult == null)
+            return result;
+
+        var textChunksField = locationalResult.GetType().GetField("textChunks",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (textChunksField == null)
+            return result;
+
+        dynamic? textChunks = textChunksField.GetValue(locationalResult);
+        if (textChunks == null)
+            return result;
+
+        foreach (dynamic chunk in textChunks)
+        {
+            try
+            {
+                var location = chunk.GetLocation();
+                var startLocation = location.GetStartLocation();
+                var text = chunk.GetText();
+
+                result.Add(new TextChunk
+                {
+                    X = startLocation.Get(0),
+                    Y = startLocation.Get(1),
+                    Text = text
+                });
+            }
+            catch { }
+        }
+
+        return result;
+    }
+
+    private List<List<TextChunk>> GroupChunksByLine(List<TextChunk> chunks)
+    {
+        var lines = new List<List<TextChunk>>();
+        var currentLine = new List<TextChunk>();
+        float? lastY = null;
+
+        foreach (var chunk in chunks)
+        {
+            if (lastY == null || Math.Abs(chunk.Y - lastY.Value) < 2)
+            {
+                currentLine.Add(chunk);
+            }
+            else
+            {
+                if (currentLine.Any())
+                    lines.Add(new List<TextChunk>(currentLine));
+                currentLine.Clear();
+                currentLine.Add(chunk);
+            }
+
+            lastY = chunk.Y;
+        }
+
+        if (currentLine.Any())
+            lines.Add(currentLine);
+
+        return lines;
+    }
+
+    private class TextChunk
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public string Text { get; set; } = "";
+    }
+}
+
 
 
 ----------------------------------------
@@ -5795,8 +6141,13 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
 
 using PdfProcessor.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-using iText.Kernel.Pdf;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.IO;
 using System.Text;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using Docnet.Core;
 
 namespace PdfProcessor.Infrastructure.PdfServices;
 
@@ -5817,25 +6168,49 @@ public class PdfEditService : IPdfEditService
       {
         pdfStream.Position = 0;
 
-        using var pdfDoc = new PdfDocument(new PdfReader(pdfStream));
-
-        if (pageNumber < 1 || pageNumber > pdfDoc.GetNumberOfPages())
+        // Copiar stream para array de bytes (Docnet precisa de byte[])
+        byte[] pdfBytes;
+        using (var ms = new MemoryStream())
         {
-          throw new ArgumentException($"PÃ¡gina {pageNumber} invÃ¡lida. PDF tem {pdfDoc.GetNumberOfPages()} pÃ¡ginas.");
+          pdfStream.CopyTo(ms);
+          pdfBytes = ms.ToArray();
         }
 
-        var page = pdfDoc.GetPage(pageNumber);
-        var pageSize = page.GetPageSize();
+        // Usar Docnet.Core para renderizar a pÃ¡gina especÃ­fica
+        using var library = DocLib.Instance;
+        using var docReader = library.GetDocReader(pdfBytes, new Docnet.Core.Models.PageDimensions(1024, 1024));
 
+        if (docReader.GetPageCount() < pageNumber)
+        {
+          throw new ArgumentException($"PÃ¡gina {pageNumber} invÃ¡lida. PDF tem {docReader.GetPageCount()} pÃ¡ginas.");
+        }
+
+        // Renderizar pÃ¡gina (pageNumber - 1 porque Docnet usa Ã­ndice 0-based)
+        using var pageReader = docReader.GetPageReader(pageNumber - 1);
+        var rawBytes = pageReader.GetImage();
+        var pageWidth = pageReader.GetPageWidth();
+        var pageHeight = pageReader.GetPageHeight();
+
+        // Converter raw bytes para imagem usando ImageSharp
+        using var image = Image.LoadPixelData<Bgra32>(rawBytes, pageWidth, pageHeight);
+
+        // Calcular dimensÃµes proporcionais
         var width = maxWidth;
-        var height = (int)(pageSize.GetHeight() / pageSize.GetWidth() * maxWidth);
+        var height = (int)((double)pageHeight / pageWidth * maxWidth);
 
-        var svg = GenerateSvgThumbnail(pageNumber, width, height, pageSize);
+        // Redimensionar mantendo proporÃ§Ã£o
+        image.Mutate(x => x.Resize(new ResizeOptions
+        {
+          Size = new Size(width, height),
+          Mode = ResizeMode.Max
+        }));
 
-        var svgBytes = Encoding.UTF8.GetBytes(svg);
-        var base64 = Convert.ToBase64String(svgBytes);
+        // Converter para PNG em base64
+        using var outputStream = new MemoryStream();
+        image.SaveAsPng(outputStream);
+        var base64 = Convert.ToBase64String(outputStream.ToArray());
 
-        return $"data:image/svg+xml;base64,{base64}";
+        return $"data:image/png;base64,{base64}";
       }
       catch (Exception ex)
       {
@@ -5845,38 +6220,33 @@ public class PdfEditService : IPdfEditService
     });
   }
 
-  private string GenerateSvgThumbnail(int pageNumber, int width, int height, iText.Kernel.Geom.Rectangle pageSize)
-  {
-    var orientation = pageSize.GetWidth() > pageSize.GetHeight() ? "Paisagem" : "Retrato";
-    var iconX = width / 2 - 30;
-    var iconY = height / 2 - 70;
-    
-    return $@"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>
-  <rect width='100%' height='100%' fill='white' stroke='#cbd5e0' stroke-width='2' rx='4'/>
-  <rect width='100%' height='10' fill='#667eea' opacity='0.9' rx='4'/>
-  <g transform='translate({iconX}, {iconY})'>
-    <rect x='0' y='0' width='60' height='80' fill='#e2e8f0' stroke='#a0aec0' stroke-width='2' rx='2'/>
-    <polygon points='60,0 60,15 45,0' fill='#cbd5e0' stroke='#a0aec0' stroke-width='1'/>
-    <line x1='10' y1='25' x2='50' y2='25' stroke='#718096' stroke-width='2' stroke-linecap='round'/>
-    <line x1='10' y1='35' x2='50' y2='35' stroke='#718096' stroke-width='2' stroke-linecap='round'/>
-    <line x1='10' y1='45' x2='40' y2='45' stroke='#718096' stroke-width='2' stroke-linecap='round'/>
-  </g>
-  <text x='50%' y='{height - 60}' font-family='system-ui, -apple-system, sans-serif' font-size='24' font-weight='bold' fill='#2d3748' text-anchor='middle' dominant-baseline='middle'>PÃ¡gina {pageNumber}</text>
-  <text x='50%' y='{height - 35}' font-family='system-ui, -apple-system, sans-serif' font-size='11' fill='#718096' text-anchor='middle' dominant-baseline='middle'>{pageSize.GetWidth():F0} Ã— {pageSize.GetHeight():F0} pts</text>
-  <text x='50%' y='{height - 20}' font-family='system-ui, -apple-system, sans-serif' font-size='10' fill='#a0aec0' text-anchor='middle' dominant-baseline='middle'>{orientation}</text>
-</svg>";
-  }
-
   private string GenerateErrorThumbnail(int pageNumber)
   {
-    var svg = $@"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='250'>
+    try
+    {
+      // Criar imagem de erro 200x250
+      using var image = new Image<Rgba32>(200, 250);
+      
+      image.Mutate(x => x.BackgroundColor(Color.FromRgb(255, 245, 245)));
+
+      using var outputStream = new MemoryStream();
+      image.SaveAsPng(outputStream);
+      var base64 = Convert.ToBase64String(outputStream.ToArray());
+
+      return $"data:image/png;base64,{base64}";
+    }
+    catch
+    {
+      // Fallback para SVG se ImageSharp falhar
+      var svg = $@"<svg xmlns='http://www.w3.org/2000/svg' width='200' height='250'>
   <rect width='100%' height='100%' fill='#fff5f5' stroke='#fc8181' stroke-width='2' rx='4'/>
   <text x='50%' y='50%' font-family='system-ui' font-size='16' fill='#e53e3e' text-anchor='middle'>Erro ao carregar</text>
   <text x='50%' y='65%' font-family='system-ui' font-size='12' fill='#fc8181' text-anchor='middle'>PÃ¡gina {pageNumber}</text>
 </svg>";
 
-    var svgBytes = Encoding.UTF8.GetBytes(svg);
-    return $"data:image/svg+xml;base64,{Convert.ToBase64String(svgBytes)}";
+      var svgBytes = Encoding.UTF8.GetBytes(svg);
+      return $"data:image/svg+xml;base64,{Convert.ToBase64String(svgBytes)}";
+    }
   }
 
   public async Task<int> GetPageCountAsync(Stream pdfStream)
@@ -5886,8 +6256,8 @@ public class PdfEditService : IPdfEditService
       try
       {
         pdfStream.Position = 0;
-        using var pdfDoc = new PdfDocument(new PdfReader(pdfStream));
-        var count = pdfDoc.GetNumberOfPages();
+        using var pdfDoc = PdfReader.Open(pdfStream, PdfDocumentOpenMode.Import);
+        var count = pdfDoc.PageCount;
 
         _logger.LogInformation("ðŸ“Š PDF tem {PageCount} pÃ¡ginas", count);
 
@@ -5909,14 +6279,13 @@ public class PdfEditService : IPdfEditService
     return await Task.Run(() =>
     {
       var result = new PdfEditResult();
-      MemoryStream? outputStream = null;
 
       try
       {
         pdfStream.Position = 0;
 
-        using var inputPdfDoc = new PdfDocument(new PdfReader(pdfStream));
-        result.OriginalPageCount = inputPdfDoc.GetNumberOfPages();
+        using var inputPdfDoc = PdfReader.Open(pdfStream, PdfDocumentOpenMode.Import);
+        result.OriginalPageCount = inputPdfDoc.PageCount;
 
         _logger.LogInformation("ðŸ“ Editando PDF: {FileName} ({PageCount} pÃ¡ginas)",
                 originalFileName, result.OriginalPageCount);
@@ -5924,55 +6293,53 @@ public class PdfEditService : IPdfEditService
         int pagesRotated = 0;
         int pagesKept = 0;
 
-        // SOLUÃ‡ÃƒO: Criar stream manualmente (nÃ£o usar using)
-        outputStream = new MemoryStream();
-        
-        // Usar using aninhados para writer e documento
-        using (var writer = new PdfWriter(outputStream))
+        using var outputPdfDoc = new PdfDocument();
+
+        foreach (var operation in pageOperations.OrderBy(o => o.PageNumber))
         {
-          writer.SetCloseStream(false);
-
-          using (var outputPdfDoc = new PdfDocument(writer))
+          if (operation.PageNumber < 1 || operation.PageNumber > result.OriginalPageCount)
           {
-            foreach (var operation in pageOperations.OrderBy(o => o.PageNumber))
-            {
-              if (operation.PageNumber < 1 || operation.PageNumber > result.OriginalPageCount)
-              {
-                _logger.LogWarning("âš ï¸ PÃ¡gina {PageNumber} invÃ¡lida, ignorando", operation.PageNumber);
-                continue;
-              }
-
-              if (!operation.Keep)
-              {
-                _logger.LogDebug("ðŸ—‘ï¸ Removendo pÃ¡gina {PageNumber}", operation.PageNumber);
-                continue;
-              }
-
-              var sourcePage = inputPdfDoc.GetPage(operation.PageNumber);
-              var copiedPage = sourcePage.CopyTo(outputPdfDoc);
-
-              if (operation.Rotation != 0)
-              {
-                var currentRotation = copiedPage.GetRotation();
-                var newRotation = (currentRotation + operation.Rotation) % 360;
-
-                if (newRotation < 0) newRotation += 360;
-
-                copiedPage.SetRotation(newRotation);
-                pagesRotated++;
-
-                _logger.LogDebug("ðŸ”„ PÃ¡gina {PageNumber}: {Current}Â° â†’ {New}Â°",
-                        operation.PageNumber, currentRotation, newRotation);
-              }
-
-              pagesKept++;
-            }
+            _logger.LogWarning("âš ï¸ PÃ¡gina {PageNumber} invÃ¡lida, ignorando", operation.PageNumber);
+            continue;
           }
+
+          if (!operation.Keep)
+          {
+            _logger.LogDebug("ðŸ—‘ï¸ Removendo pÃ¡gina {PageNumber}", operation.PageNumber);
+            continue;
+          }
+
+          // COPIAR PÃGINA (PdfSharp usa Ã­ndice 0-based)
+          var sourcePage = inputPdfDoc.Pages[operation.PageNumber - 1];
+          var copiedPage = outputPdfDoc.AddPage(sourcePage);
+
+          // APLICAR ROTAÃ‡ÃƒO
+          if (operation.Rotation != 0)
+          {
+            var currentRotation = (int)copiedPage.Rotate;
+            var newRotation = (currentRotation + operation.Rotation) % 360;
+
+            if (newRotation < 0) newRotation += 360;
+
+            copiedPage.Rotate = newRotation;
+            pagesRotated++;
+
+            _logger.LogDebug("ðŸ”„ PÃ¡gina {PageNumber}: {Current}Â° â†’ {New}Â°",
+                    operation.PageNumber, currentRotation, newRotation);
+          }
+
+          pagesKept++;
         }
 
-        // Stream ainda estÃ¡ aberto, capturar bytes
-        outputStream.Position = 0;
-        result.ProcessedPdfData = outputStream.ToArray();
+        if (outputPdfDoc.PageCount == 0)
+        {
+          throw new InvalidOperationException("Nenhuma pÃ¡gina foi adicionada ao PDF editado");
+        }
+
+        // SALVAR PDF
+        using var ms = new MemoryStream();
+        outputPdfDoc.Save(ms, false);
+        result.ProcessedPdfData = ms.ToArray();
 
         result.FinalPageCount = pagesKept;
         result.PagesRotated = pagesRotated;
@@ -5990,10 +6357,6 @@ public class PdfEditService : IPdfEditService
         result.Success = false;
         result.ErrorMessage = ex.Message;
         return result;
-      }
-      finally
-      {
-        outputStream?.Dispose();
       }
     });
   }
@@ -7001,6 +7364,11 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
                     <span class="nav-link">
                         <span class="nav-icon">🔜</span> Outros Bancos
                     </span>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="itau-cash2">
+                        <span class="nav-icon">🦁</span> Itaú Cash 2.0
+                    </NavLink>
                 </div>
             </div>
 
@@ -8068,11 +8436,36 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
     <h2>ðŸ› ï¸ Ferramentas PDF</h2>
 
     <div class="help-section">
+      <h3>âœï¸ Editar PDF</h3>
+      <p>Ferramenta completa para ediÃ§Ã£o avanÃ§ada de PDFs com preview visual.</p>
+      <ul>
+        <li><strong>Entrada:</strong> Um arquivo PDF por vez</li>
+        <li><strong>Recursos:</strong>
+          <ul>
+            <li>RotaÃ§Ã£o de pÃ¡ginas individuais (90Â°, 180Â°, 270Â°)</li>
+            <li>RemoÃ§Ã£o de pÃ¡ginas especÃ­ficas</li>
+            <li>Preview visual de todas as pÃ¡ginas</li>
+            <li>Indicadores visuais de rotaÃ§Ã£o</li>
+          </ul>
+        </li>
+        <li><strong>Interface:</strong> Grid visual com miniaturas das pÃ¡ginas</li>
+        <li><strong>SaÃ­da:</strong> PDF editado com pÃ¡ginas rotacionadas e/ou removidas</li>
+      </ul>
+      <div class="info-box info">
+        <div class="info-icon">ðŸ’¡</div>
+        <div>
+          <strong>Dica:</strong> Clique nos botÃµes de rotaÃ§Ã£o para girar pÃ¡ginas especÃ­ficas. Use o botÃ£o de lixeira para marcar pÃ¡ginas para remoÃ§Ã£o (elas ficam destacadas em vermelho).
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
       <h3>ðŸ”„ Rotacionar PDF</h3>
       <p>Permite rotacionar pÃ¡ginas de PDFs com preview em tempo real.</p>
       <ul>
         <li><strong>Entrada:</strong> MÃºltiplos arquivos PDF</li>
         <li><strong>Ã‚ngulos:</strong> 90Â°, 180Â°, 270Â°</li>
+        <li><strong>AplicaÃ§Ã£o:</strong> RotaÃ§Ã£o em todas as pÃ¡ginas do PDF</li>
         <li><strong>SaÃ­da:</strong> PDFs rotacionados individualmente ou em ZIP</li>
       </ul>
     </div>
@@ -8097,7 +8490,18 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
       </ul>
     </div>
 
-    <h2>ðŸ¦ ExtraÃ§Ã£o BancÃ¡ria</h2>
+    <h2>ðŸ¦ ExtraÃ§Ã£o BancÃ¡ria</h2>
+
+    <div class="help-section">
+      <h3>ðŸŸ¦ BTG Pactual</h3>
+      <p>Extrai transaÃ§Ãµes de extratos do BTG Pactual.</p>
+      <ul>
+        <li><strong>Formato:</strong> Extrato bancÃ¡rio padrÃ£o BTG</li>
+        <li><strong>Colunas:</strong> Data, HistÃ³rico, Documento, Valor, Saldo</li>
+        <li><strong>MÃºltiplas contas:</strong> Detecta e separa automaticamente</li>
+        <li><strong>SaÃ­da:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
 
     <div class="help-section">
       <h3>ðŸŸ§ ItaÃº - Cash Transactions</h3>
@@ -8133,7 +8537,30 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
       </div>
     </div>
 
-    <h2>ðŸ“ InformaÃ§Ãµes Gerais</h2>
+    <div class="help-section">
+      <h3>ðŸŸ¥ Morgan Stanley</h3>
+      <p>Extrai transaÃ§Ãµes de extratos do Morgan Stanley.</p>
+      <ul>
+        <li><strong>Formato:</strong> Statement padrÃ£o Morgan Stanley</li>
+        <li><strong>Colunas:</strong> Data, DescriÃ§Ã£o, DÃ©bito, CrÃ©dito, Saldo</li>
+        <li><strong>MÃºltiplas contas:</strong> Detecta e separa automaticamente</li>
+        <li><strong>SaÃ­da:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>ðŸŸ« UBS Switzerland</h3>
+      <p>Extrai transaÃ§Ãµes de extratos do UBS SuÃ­Ã§a.</p>
+      <ul>
+        <li><strong>Formato:</strong> Extrato bancÃ¡rio padrÃ£o UBS</li>
+        <li><strong>Colunas:</strong> Data, DescriÃ§Ã£o, Valor, Saldo</li>
+        <li><strong>MÃºltiplas moedas:</strong> Suporta CHF, USD, EUR</li>
+        <li><strong>MÃºltiplas contas:</strong> Detecta e separa automaticamente</li>
+        <li><strong>SaÃ­da:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
+
+    <h2>ðŸ“‹ InformaÃ§Ãµes Gerais</h2>
 
     <div class="help-section">
       <h3>ðŸ“ Limites</h3>
@@ -8150,6 +8577,7 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
         <li>Arquivos sÃ£o processados temporariamente</li>
         <li>Dados nÃ£o sÃ£o armazenados apÃ³s o processamento</li>
         <li>ValidaÃ§Ã£o de tipos de arquivo</li>
+        <li>Processamento local no servidor</li>
       </ul>
     </div>
 
@@ -8160,6 +8588,18 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
         <li>Para melhores resultados, use PDFs com boa qualidade</li>
         <li>Em caso de erro, tente processar os arquivos individualmente</li>
         <li>Verifique sempre os resultados apÃ³s a extraÃ§Ã£o</li>
+        <li>Use a ferramenta "Editar PDF" para operaÃ§Ãµes em pÃ¡ginas especÃ­ficas</li>
+        <li>Use "Rotacionar PDF" quando precisa girar todas as pÃ¡ginas de mÃºltiplos arquivos</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>ðŸ†˜ Suporte</h3>
+      <p>Em caso de dÃºvidas ou problemas:</p>
+      <ul>
+        <li>Verifique se o PDF estÃ¡ no formato correto</li>
+        <li>Teste com um arquivo menor primeiro</li>
+        <li>Entre em contato com o suporte tÃ©cnico se o problema persistir</li>
       </ul>
     </div>
   </div>
@@ -8212,7 +8652,40 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
   .content-card h2:first-child {
     margin-top: 0;
   }
+
+  .info-box {
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 6px;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .info-box.info {
+    background: #e6f3ff;
+    border-left: 4px solid #3b82f6;
+  }
+
+  .info-box.warning {
+    background: #fff3cd;
+    border-left: 4px solid #f59e0b;
+  }
+
+  .info-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .info-box ul {
+    margin: 0.5rem 0 0 0;
+  }
+
+  .info-box li {
+    margin: 0.25rem 0;
+  }
 </style>
+
 
 
 ----------------------------------------
@@ -8375,6 +8848,111 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
 
 <!-- 3. LÃ³gica especÃ­fica do ItaÃº Cash -->
 <script src="/js/itau-cash.js"></script>
+
+
+
+----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Web\Components\Pages\ItauCash2.razor
+----------------------------------------
+
+@page "/itau-cash2"
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>ItaÃº Cash 2.0 - Extrator PDF</PageTitle>
+
+<div class="itau-cash2-container">
+    <div class="page-header">
+        <div class="header-icon">ðŸ¦</div>
+        <div>
+            <h1>ItaÃº Cash 2.0</h1>
+            <p class="subtitle">ExtraÃ§Ã£o com localizaÃ§Ã£o por coordenadas</p>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h3>â„¹ï¸ InformaÃ§Ãµes</h3>
+        <ul>
+            <li><strong>Formato:</strong> ItaÃº Cash Transactions Statement PDF</li>
+            <li><strong>Modo DEBUG:</strong> Ative para identificar coordenadas X,Y</li>
+            <li><strong>MÃºltiplas contas:</strong> Processa todas as contas do PDF</li>
+            <li><strong>Colunas extraÃ­das:</strong> Operation Date, Value Date, Description, Value, Account Balance</li>
+            <li><strong>SaÃ­da:</strong> Arquivo Excel (.xlsx) consolidado</li>
+        </ul>
+    </div>
+
+    <!-- DEBUG MODE TOGGLE -->
+    <div class="debug-toggle-container">
+        <label class="debug-toggle">
+            <input type="checkbox" id="debugModeCheckbox" />
+            <span class="debug-toggle-label">
+                <span class="debug-icon">ðŸ”</span>
+                Modo DEBUG (identificar coordenadas)
+            </span>
+        </label>
+        <p class="debug-help-text">
+            Ative o modo DEBUG para gerar um relatÃ³rio Excel com as coordenadas X,Y de cada elemento.
+            Use este relatÃ³rio para ajustar as constantes no parser.
+        </p>
+    </div>
+
+    <div class="upload-section">
+        <!-- âœ… CORRETO: Sem onclick inline - gerenciado pelo pdf-upload-handler.js -->
+        <div id="uploadArea" class="upload-area">
+            <div class="upload-icon">ðŸ“„</div>
+            <h3>Arraste os PDFs aqui</h3>
+            <p>ou clique para selecionar</p>
+        </div>
+        <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
+
+        <div id="fileList" class="file-list" style="display: none;">
+            <h3>Arquivos Selecionados:</h3>
+            <div id="fileListContent"></div>
+            <button id="processBtn" class="process-btn">
+                ðŸš€ Processar PDFs
+            </button>
+        </div>
+    </div>
+
+    <div id="resultSection" class="result-section" style="display: none;">
+        <div class="result-success">
+            <h3>âœ… Processamento ConcluÃ­do!</h3>
+            <p id="resultMessage"></p>
+            <a id="downloadLink" class="download-btn" download>
+                ðŸ“¥ Download Excel
+            </a>
+        </div>
+    </div>
+
+    <div id="errorSection" class="error-section" style="display: none;">
+        <div class="error-message">
+            <h3>âŒ Erro no Processamento</h3>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="loadingSection" class="loading-section" style="display: none;">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Processando PDFs do ItaÃº Cash 2.0...</p>
+    </div>
+</div>
+
+<!-- ========================================
+     CSS - Ordem crÃ­tica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/itau-cash2.css" />
+
+<!-- ========================================
+     JavaScript - Ordem crÃ­tica
+     ======================================== -->
+<!-- 1. ConfiguraÃ§Ã£o da API -->
+<script src="/js/api-config.js"></script>
+
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. LÃ³gica especÃ­fica do ItaÃº Cash 2 -->
+<script src="/js/itau-cash2.js"></script>
 
 
 
@@ -11084,6 +11662,343 @@ Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\Pdf
   }
 }
 
+
+
+----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Web\wwwroot\css\itau-cash2.css
+----------------------------------------
+
+/* ================================================================
+   ITAÃš CASH 2.0 - Estilos EspecÃ­ficos da PÃ¡gina
+   ================================================================
+   Este arquivo contÃ©m APENAS estilos especÃ­ficos da pÃ¡gina ItaÃº Cash 2.0
+   Estilos de upload, botÃµes, loading etc estÃ£o em pdf-upload-shared.css
+   
+   COR TEMA: Laranja ItaÃº #FF8C00
+   ================================================================ */
+
+/* ============================================================
+   LAYOUT DA PÃGINA
+   ============================================================ */
+
+.itau-cash2-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ============================================================
+   CABEÃ‡ALHO (ESTILO PRÃ“PRIO DO ITAÃš - LARANJA)
+   ============================================================ */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.header-icon {
+  font-size: 3rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+}
+
+.subtitle {
+  color: #718096;
+  margin: 0;
+}
+
+/* ============================================================
+   INFO BOX (LARANJA ITAÃš)
+   ============================================================ */
+
+.info-box {
+  background: #fff5e6;
+  border-left: 4px solid #ff8c00;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+.info-box h3 {
+  color: #ff8c00;
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.info-box ul {
+  margin: 1rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.info-box li {
+  margin-bottom: 0.5rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   DEBUG TOGGLE (ESPECÃFICO DO ITAÃš CASH 2)
+   ============================================================ */
+
+.debug-toggle-container {
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.debug-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.debug-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+  accent-color: #ff8c00;
+}
+
+.debug-toggle-label {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.debug-icon {
+  margin-right: 8px;
+  font-size: 1.3rem;
+}
+
+.debug-help-text {
+  margin: 1rem 0 0 32px;
+  color: #718096;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Quando debug estÃ¡ ativo */
+.upload-area.debug-mode-active {
+  background: linear-gradient(135deg, #fffacd 0%, #ffeb3b 100%) !important;
+  border-color: #ffd700 !important;
+}
+
+.debug-mode-badge {
+  display: inline-block;
+  background: #ffd700;
+  color: #000;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+/* ============================================================
+   SEÃ‡ÃƒO DE UPLOAD
+   ============================================================ */
+
+.upload-section {
+  margin-bottom: 2rem;
+}
+
+/* ============================================================
+   FILE LIST (ESPECÃFICO DO ITAÃš CASH 2)
+   ============================================================ */
+
+.file-list {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.file-list h3 {
+  color: #ff8c00;
+  margin-top: 0;
+  font-size: 1.125rem;
+}
+
+#fileListContent ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+#fileListContent li {
+  padding: 0.75rem;
+  background: #fff5e6;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  border-left: 3px solid #ff8c00;
+  color: #334155;
+}
+
+/* ============================================================
+   PROCESS BUTTON (ESPECÃFICO DO ITAÃš - LARANJA)
+   ============================================================ */
+
+.process-btn {
+  background: #ff8c00;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.process-btn:hover {
+  background: #ff6b00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+
+.process-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================================
+   RESULT E ERROR SECTIONS
+   ============================================================ */
+
+.result-section {
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.result-success h3 {
+  color: #16a34a;
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.result-success p {
+  color: #15803d;
+  margin: 1rem 0;
+}
+
+.download-btn {
+  display: inline-block;
+  background: #16a34a;
+  color: white;
+  padding: 1rem 2rem;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.download-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.error-section {
+  background: #fef2f2;
+  border: 2px solid #fca5a5;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.error-message h3 {
+  color: #dc2626;
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.error-message p {
+  color: #991b1b;
+  margin: 1rem 0 0 0;
+}
+
+/* ============================================================
+   LOADING SECTION
+   ============================================================ */
+
+.loading-section {
+  text-align: center;
+  padding: 3rem;
+}
+
+.loading-section p {
+  color: #475569;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+/* Customizar spinner para laranja ItaÃº */
+.loading-section .spinner {
+  border-top-color: #ff8c00;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .itau-cash2-container {
+    padding: 1rem;
+  }
+
+  .header {
+    padding: 1.5rem;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .info-box {
+    padding: 1rem;
+  }
+
+  .debug-toggle-container {
+    padding: 1rem;
+  }
+
+  .file-list {
+    padding: 1rem;
+  }
+
+  .result-section,
+  .error-section {
+    padding: 1.5rem;
+  }
+
+  .process-btn {
+    font-size: 1rem;
+  }
+}
 
 
 ----------------------------------------
@@ -14313,6 +15228,284 @@ window.clearFiles = clearFiles;
 
 console.log("âœ… Script itau-cash.js carregado completamente");
 
+
+
+----------------------------------------
+Conteudo do arquivo: C:\PROJETOS\MPCN-SYSTEMS\Extrator-PDF-MS\mpcn-pdf-tools\PdfProcessor.Web\wwwroot\js\itau-cash2.js
+----------------------------------------
+
+// ================================================================
+// ITAÃš CASH 2.0 - Script de Upload Simplificado com Modo DEBUG
+// ================================================================
+// Este arquivo usa o sistema compartilhado PdfUploadHandler
+// Apenas define a lÃ³gica especÃ­fica do ItaÃº Cash 2.0
+// ================================================================
+
+console.log("ðŸ¦ ItaÃº Cash 2.0 - Script carregado");
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+
+let selectedFiles = [];
+let debugMode = false;
+
+// ============================================================
+// API CONFIGURATION
+// ============================================================
+
+function getApiUrl() {
+  return window.PdfProcessorConfig.getEndpoint("/api/ItauCash2/process");
+}
+
+// ============================================================
+// UI FUNCTIONS ESPECÃFICAS DO ITAÃš CASH 2
+// ============================================================
+
+function showLoading() {
+  const loadingSection = document.getElementById("loadingSection");
+  const loadingMessage = document.getElementById("loadingMessage");
+  
+  if (debugMode) {
+    loadingMessage.textContent = "Gerando relatÃ³rio DEBUG com coordenadas X,Y...";
+  } else {
+    loadingMessage.textContent = "Processando PDFs do ItaÃº Cash 2.0...";
+  }
+  
+  loadingSection.style.display = "block";
+  document.getElementById("resultSection").style.display = "none";
+  document.getElementById("errorSection").style.display = "none";
+  document.getElementById("fileList").style.display = "none";
+}
+
+function hideLoading() {
+  document.getElementById("loadingSection").style.display = "none";
+}
+
+function showSuccess(filename, url) {
+  const message = debugMode 
+    ? `RelatÃ³rio DEBUG gerado: ${filename}. Abra o Excel para ver as coordenadas X,Y de cada elemento.`
+    : `Arquivo gerado: ${filename}`;
+    
+  document.getElementById("resultMessage").textContent = message;
+  document.getElementById("downloadLink").href = url;
+  document.getElementById("downloadLink").download = filename;
+  document.getElementById("resultSection").style.display = "block";
+}
+
+function showError(message) {
+  document.getElementById("errorMessage").textContent = message;
+  document.getElementById("errorSection").style.display = "block";
+}
+
+function updateUI() {
+  const fileList = document.getElementById("fileList");
+  const fileListContent = document.getElementById("fileListContent");
+  const processBtn = document.getElementById("processBtn");
+
+  if (selectedFiles.length === 0) {
+    fileList.style.display = "none";
+    return;
+  }
+
+  // Atualizar texto do botÃ£o baseado no modo DEBUG
+  if (debugMode) {
+    processBtn.innerHTML = "ðŸ” Gerar RelatÃ³rio DEBUG";
+  } else {
+    processBtn.innerHTML = "ðŸš€ Processar PDFs";
+  }
+
+  // Renderizar lista
+  let html = "<ul>";
+  selectedFiles.forEach((file) => {
+    html += `<li>ðŸ“„ ${file.name} (${(file.size / 1024).toFixed(2)} KB)</li>`;
+  });
+  html += "</ul>";
+
+  fileListContent.innerHTML = html;
+  fileList.style.display = "block";
+
+  console.log(`ðŸ“‹ Mostrando ${selectedFiles.length} arquivo(s) - Debug: ${debugMode}`);
+}
+
+// ============================================================
+// DEBUG MODE TOGGLE
+// ============================================================
+
+function updateDebugMode() {
+  const checkbox = document.getElementById("debugModeCheckbox");
+  const uploadArea = document.getElementById("uploadArea");
+  
+  debugMode = checkbox.checked;
+  
+  if (debugMode) {
+    uploadArea.classList.add("debug-mode-active");
+    console.log("ðŸ” Modo DEBUG ativado");
+  } else {
+    uploadArea.classList.remove("debug-mode-active");
+    console.log("âš¡ Modo PRODUÃ‡ÃƒO ativado");
+  }
+  
+  // Atualizar UI se jÃ¡ tiver arquivos selecionados
+  if (selectedFiles.length > 0) {
+    updateUI();
+  }
+}
+
+// ============================================================
+// FILE MANAGEMENT
+// ============================================================
+
+function clearFiles() {
+  console.log("ðŸ—‘ï¸ Limpando todos os arquivos");
+  selectedFiles = [];
+  updateUI();
+
+  // Esconder sections
+  document.getElementById("resultSection").style.display = "none";
+  document.getElementById("errorSection").style.display = "none";
+}
+
+// ============================================================
+// CALLBACK DE ARQUIVOS SELECIONADOS
+// ============================================================
+
+function onFilesSelected(validFiles, errors) {
+  console.log("ðŸ“ Callback recebido:", {
+    validFiles: validFiles.length,
+    errors: errors.length,
+    debugMode: debugMode
+  });
+
+  // Adicionar arquivos vÃ¡lidos
+  selectedFiles = validFiles;
+
+  // Mostrar erros se houver
+  if (errors.length > 0) {
+    showError(errors[0]);
+  }
+
+  // Atualizar interface
+  updateUI();
+}
+
+// ============================================================
+// PROCESSAR ARQUIVOS
+// ============================================================
+
+async function processFiles() {
+  if (selectedFiles.length === 0) {
+    showError("Selecione pelo menos um arquivo PDF");
+    return;
+  }
+
+  console.log(
+    "ðŸš€ Iniciando processamento de",
+    selectedFiles.length,
+    "arquivo(s) - Debug:",
+    debugMode
+  );
+
+  showLoading();
+
+  try {
+    // Criar FormData
+    const formData = new FormData();
+    selectedFiles.forEach((file, index) => {
+      formData.append("files", file);
+      console.log(`ðŸ“Ž Arquivo ${index + 1} adicionado: ${file.name}`);
+    });
+    
+    // Adicionar flag de debug mode
+    formData.append("debugMode", debugMode.toString());
+    console.log(`ðŸ”§ Debug mode: ${debugMode}`);
+
+    console.log("ðŸ“¤ Enviando para API:", getApiUrl());
+
+    // Fazer requisiÃ§Ã£o
+    const response = await fetch(getApiUrl(), {
+      method: "POST",
+      body: formData,
+    });
+
+    console.log("ðŸ“¥ Resposta recebida:", response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro ${response.status}: ${errorText}`);
+    }
+
+    // Download do arquivo Excel
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // Tentar extrair filename do header
+    const filename =
+      response.headers.get("content-disposition")?.split("filename=")[1]?.replace(/"/g, '') ||
+      (debugMode 
+        ? `ItauCash2_DEBUG_${new Date().toISOString().split("T")[0]}.xlsx`
+        : `ItauCash2_Transacoes_${new Date().toISOString().split("T")[0]}.xlsx`);
+
+    console.log(`âœ… Sucesso! Arquivo: ${filename}`);
+
+    showSuccess(filename, url);
+  } catch (error) {
+    console.error("âŒ Erro no processamento:", error);
+    showError(error.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================================================
+// INICIALIZAÃ‡ÃƒO
+// ============================================================
+
+// Tornar funÃ§Ã£o disponÃ­vel globalmente para reinicializaÃ§Ã£o
+window.initializePdfUpload = function () {
+  console.log("ðŸ”§ Inicializando ItaÃº Cash 2.0 Upload Handler...");
+
+  // Inicializar sistema de upload
+  window.PdfUploadHandler.init({
+    uploadAreaId: "uploadArea",
+    fileInputId: "fileInput",
+    onFilesSelected: onFilesSelected,
+    maxFileSize: 16 * 1024 * 1024, // 16MB
+    allowMultiple: true,
+    debug: true,
+  });
+
+  // Adicionar listener ao botÃ£o processar
+  const processBtn = document.getElementById("processBtn");
+  if (processBtn) {
+    processBtn.addEventListener("click", processFiles);
+    console.log("âœ… BotÃ£o processar configurado");
+  }
+  
+  // Adicionar listener ao checkbox de debug
+  const debugCheckbox = document.getElementById("debugModeCheckbox");
+  if (debugCheckbox) {
+    debugCheckbox.addEventListener("change", updateDebugMode);
+    console.log("âœ… Checkbox DEBUG configurado");
+  }
+};
+
+// InicializaÃ§Ã£o automÃ¡tica
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", window.initializePdfUpload);
+} else {
+  // DOM jÃ¡ carregado (navegaÃ§Ã£o SPA do Blazor)
+  setTimeout(window.initializePdfUpload, 50);
+}
+
+// ============================================================
+// FUNÃ‡Ã•ES GLOBAIS (chamadas pelo HTML)
+// ============================================================
+
+window.processFiles = processFiles;
+window.clearFiles = clearFiles;
+
+console.log("âœ… Script itau-cash2.js carregado completamente");
 
 
 ----------------------------------------

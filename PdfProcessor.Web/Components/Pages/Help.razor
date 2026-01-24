@@ -15,11 +15,36 @@
     <h2>🛠️ Ferramentas PDF</h2>
 
     <div class="help-section">
+      <h3>✏️ Editar PDF</h3>
+      <p>Ferramenta completa para edição avançada de PDFs com preview visual.</p>
+      <ul>
+        <li><strong>Entrada:</strong> Um arquivo PDF por vez</li>
+        <li><strong>Recursos:</strong>
+          <ul>
+            <li>Rotação de páginas individuais (90°, 180°, 270°)</li>
+            <li>Remoção de páginas específicas</li>
+            <li>Preview visual de todas as páginas</li>
+            <li>Indicadores visuais de rotação</li>
+          </ul>
+        </li>
+        <li><strong>Interface:</strong> Grid visual com miniaturas das páginas</li>
+        <li><strong>Saída:</strong> PDF editado com páginas rotacionadas e/ou removidas</li>
+      </ul>
+      <div class="info-box info">
+        <div class="info-icon">💡</div>
+        <div>
+          <strong>Dica:</strong> Clique nos botões de rotação para girar páginas específicas. Use o botão de lixeira para marcar páginas para remoção (elas ficam destacadas em vermelho).
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
       <h3>🔄 Rotacionar PDF</h3>
       <p>Permite rotacionar páginas de PDFs com preview em tempo real.</p>
       <ul>
         <li><strong>Entrada:</strong> Múltiplos arquivos PDF</li>
         <li><strong>Ângulos:</strong> 90°, 180°, 270°</li>
+        <li><strong>Aplicação:</strong> Rotação em todas as páginas do PDF</li>
         <li><strong>Saída:</strong> PDFs rotacionados individualmente ou em ZIP</li>
       </ul>
     </div>
@@ -44,7 +69,18 @@
       </ul>
     </div>
 
-    <h2>🏦 Extração Bancária</h2>
+    <h2>🦁 Extração Bancária</h2>
+
+    <div class="help-section">
+      <h3>🟦 BTG Pactual</h3>
+      <p>Extrai transações de extratos do BTG Pactual.</p>
+      <ul>
+        <li><strong>Formato:</strong> Extrato bancário padrão BTG</li>
+        <li><strong>Colunas:</strong> Data, Histórico, Documento, Valor, Saldo</li>
+        <li><strong>Múltiplas contas:</strong> Detecta e separa automaticamente</li>
+        <li><strong>Saída:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
 
     <div class="help-section">
       <h3>🟧 Itaú - Cash Transactions</h3>
@@ -80,7 +116,30 @@
       </div>
     </div>
 
-    <h2>📝 Informações Gerais</h2>
+    <div class="help-section">
+      <h3>🟥 Morgan Stanley</h3>
+      <p>Extrai transações de extratos do Morgan Stanley.</p>
+      <ul>
+        <li><strong>Formato:</strong> Statement padrão Morgan Stanley</li>
+        <li><strong>Colunas:</strong> Data, Descrição, Débito, Crédito, Saldo</li>
+        <li><strong>Múltiplas contas:</strong> Detecta e separa automaticamente</li>
+        <li><strong>Saída:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🟫 UBS Switzerland</h3>
+      <p>Extrai transações de extratos do UBS Suíça.</p>
+      <ul>
+        <li><strong>Formato:</strong> Extrato bancário padrão UBS</li>
+        <li><strong>Colunas:</strong> Data, Descrição, Valor, Saldo</li>
+        <li><strong>Múltiplas moedas:</strong> Suporta CHF, USD, EUR</li>
+        <li><strong>Múltiplas contas:</strong> Detecta e separa automaticamente</li>
+        <li><strong>Saída:</strong> Excel com uma aba por conta</li>
+      </ul>
+    </div>
+
+    <h2>📋 Informações Gerais</h2>
 
     <div class="help-section">
       <h3>📏 Limites</h3>
@@ -97,6 +156,7 @@
         <li>Arquivos são processados temporariamente</li>
         <li>Dados não são armazenados após o processamento</li>
         <li>Validação de tipos de arquivo</li>
+        <li>Processamento local no servidor</li>
       </ul>
     </div>
 
@@ -107,6 +167,18 @@
         <li>Para melhores resultados, use PDFs com boa qualidade</li>
         <li>Em caso de erro, tente processar os arquivos individualmente</li>
         <li>Verifique sempre os resultados após a extração</li>
+        <li>Use a ferramenta "Editar PDF" para operações em páginas específicas</li>
+        <li>Use "Rotacionar PDF" quando precisa girar todas as páginas de múltiplos arquivos</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🆘 Suporte</h3>
+      <p>Em caso de dúvidas ou problemas:</p>
+      <ul>
+        <li>Verifique se o PDF está no formato correto</li>
+        <li>Teste com um arquivo menor primeiro</li>
+        <li>Entre em contato com o suporte técnico se o problema persistir</li>
       </ul>
     </div>
   </div>
@@ -158,5 +230,37 @@
 
   .content-card h2:first-child {
     margin-top: 0;
+  }
+
+  .info-box {
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 6px;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .info-box.info {
+    background: #e6f3ff;
+    border-left: 4px solid #3b82f6;
+  }
+
+  .info-box.warning {
+    background: #fff3cd;
+    border-left: 4px solid #f59e0b;
+  }
+
+  .info-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .info-box ul {
+    margin: 0.5rem 0 0 0;
+  }
+
+  .info-box li {
+    margin: 0.25rem 0;
   }
 </style>

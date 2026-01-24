@@ -21,6 +21,7 @@ builder.Services.AddScoped<IItauCashParser, ItauCashParser>();
 builder.Services.AddScoped<IBtgParser, BtgParser>();
 builder.Services.AddScoped<IUbsParser, UbsParser>();
 builder.Services.AddScoped<IMorganStanleyParser, MorganStanleyParser>();
+builder.Services.AddScoped<IItauCash2Parser, ItauCash2Parser>();
 
 // âœ… CORS DINÃ‚MICO: Aceita qualquer rede local + localhost
 builder.Services.AddCors(options =>

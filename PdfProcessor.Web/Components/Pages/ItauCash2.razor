@@ -1,0 +1,82 @@
+@page "/itau-cash2"
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>Itaú Cash 2.0 - Extrator PDF</PageTitle>
+
+<div class="itau-cash2-container">
+    <div class="page-header">
+        <div class="header-icon">🟧</div>
+        <div>
+            <h1>Itaú Cash 2.0</h1>
+            <p class="subtitle">Extração de Cash Transactions (USD/EUR/BRL)</p>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h3>ℹ️ Informações</h3>
+        <ul>
+            <li><strong>Formato:</strong> Itaú Cash Transactions PDF</li>
+            <li><strong>Múltiplas contas:</strong> Processa todas as contas do PDF</li>
+            <li><strong>Colunas extraídas:</strong> Operation Date, Value Date, Description, Value, Account Balance</li>
+            <li><strong>Saída:</strong> Arquivo Excel (.xlsx) com uma aba por conta/moeda</li>
+            <li><strong>Detecção:</strong> Sistema por coordenadas para máxima precisão</li>
+        </ul>
+    </div>
+
+    <div class="upload-section">
+        <div id="uploadArea" class="upload-area">
+            <div class="upload-icon">📄</div>
+            <h3>Arraste os PDFs aqui</h3>
+            <p>ou clique para selecionar</p>
+        </div>
+        <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf" />
+
+        <div id="fileList" class="file-list" style="display: none;">
+            <h3>Arquivos Selecionados:</h3>
+            <div id="fileListContent"></div>
+            <button id="processBtn" class="process-btn">
+                🚀 Processar PDFs
+            </button>
+        </div>
+    </div>
+
+    <div id="resultSection" class="result-section" style="display: none;">
+        <div class="result-success">
+            <h3>✅ Processamento Concluído!</h3>
+            <p id="resultMessage"></p>
+            <a id="downloadLink" class="download-btn" download>
+                📥 Download Excel
+            </a>
+        </div>
+    </div>
+
+    <div id="errorSection" class="error-section" style="display: none;">
+        <div class="error-message">
+            <h3>❌ Erro no Processamento</h3>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="loadingSection" class="loading-section" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processando PDFs do Itaú Cash Transactions...</p>
+    </div>
+</div>
+
+<!-- ========================================
+     CSS - Ordem crítica: Shared primeiro
+     ======================================== -->
+<link rel="stylesheet" href="/css/pdf-upload-shared.css" />
+<link rel="stylesheet" href="/css/itau-cash2.css" />
+
+<!-- ========================================
+     JavaScript - Ordem crítica
+     ======================================== -->
+<!-- 1. Configuração da API -->
+<script src="/js/api-config.js"></script>
+
+<!-- 2. Sistema de upload compartilhado -->
+<script src="/js/pdf-upload-handler.js"></script>
+
+<!-- 3. Lógica específica do Itaú Cash 2.0 -->
+<script src="/js/itau-cash2.js"></script>
