@@ -1,0 +1,263 @@
+/* ================================================================
+   JULIUS BÄR - Estilos Específicos da Página
+   ================================================================
+   Este arquivo contém APENAS estilos específicos da página Julius Bär
+   Estilos de upload, botões, loading etc estão em pdf-upload-shared.css
+   
+   COR TEMA: Azul Escuro Julius Bär #003B5C
+   ================================================================ */
+
+/* ============================================================
+   LAYOUT DA PÁGINA
+   ============================================================ */
+
+.julius-bar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ============================================================
+   CABEÇALHO (ESTILO PRÓPRIO DO JULIUS BÄR - AZUL ESCURO)
+   ============================================================ */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.header-icon {
+  font-size: 3rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+}
+
+.subtitle {
+  color: #718096;
+  margin: 0;
+}
+
+/* ============================================================
+   INFO BOX (AZUL ESCURO)
+   ============================================================ */
+
+.info-box {
+  background: #f0f7fb;
+  border-left: 4px solid #003b5c;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+.info-box h3 {
+  color: #003b5c;
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.info-box ul {
+  margin: 1rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.info-box li {
+  margin-bottom: 0.5rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   SEÇÃO DE UPLOAD
+   ============================================================ */
+
+.upload-section {
+  margin-bottom: 2rem;
+}
+
+/* ============================================================
+   FILE LIST (ESPECÍFICO DO JULIUS BÄR)
+   ============================================================ */
+
+.file-list {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.file-list h3 {
+  color: #003b5c;
+  margin-top: 0;
+  font-size: 1.125rem;
+}
+
+#fileListContent ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+#fileListContent li {
+  padding: 0.75rem;
+  background: #f0f7fb;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  border-left: 3px solid #003b5c;
+  color: #334155;
+}
+
+/* ============================================================
+   PROCESS BUTTON (ESPECÍFICO DO JULIUS BÄR - AZUL ESCURO)
+   ============================================================ */
+
+.process-btn {
+  background: #003b5c;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.process-btn:hover {
+  background: #002a42;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 59, 92, 0.3);
+}
+
+.process-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================================
+   RESULT E ERROR SECTIONS
+   ============================================================ */
+
+.result-section {
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.result-success h3 {
+  color: #16a34a;
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.result-success p {
+  color: #15803d;
+  margin: 1rem 0;
+}
+
+.download-btn {
+  display: inline-block;
+  background: #16a34a;
+  color: white;
+  padding: 1rem 2rem;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.download-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.error-section {
+  background: #fef2f2;
+  border: 2px solid #fca5a5;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.error-message h3 {
+  color: #dc2626;
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.error-message p {
+  color: #991b1b;
+  margin: 1rem 0 0 0;
+}
+
+/* ============================================================
+   LOADING SECTION
+   ============================================================ */
+
+.loading-section {
+  text-align: center;
+  padding: 3rem;
+}
+
+.loading-section p {
+  color: #475569;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+/* Customizar spinner para azul escuro */
+.loading-section .spinner {
+  border-top-color: #003b5c;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .julius-bar-container {
+    padding: 1rem;
+  }
+
+  .header {
+    padding: 1.5rem;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .info-box {
+    padding: 1rem;
+  }
+
+  .file-list {
+    padding: 1rem;
+  }
+
+  .result-section,
+  .error-section {
+    padding: 1.5rem;
+  }
+
+  .process-btn {
+    font-size: 1rem;
+  }
+}

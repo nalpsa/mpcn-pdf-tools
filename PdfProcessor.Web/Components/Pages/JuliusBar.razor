@@ -1,25 +1,25 @@
-@page "/itau-cash2"
+@page "/julius-bar"
 @using Microsoft.AspNetCore.Components.Forms
 
-<PageTitle>Itaú Cash 2.0 - Extrator PDF</PageTitle>
+<PageTitle>Julius Bär - Extrator PDF</PageTitle>
 
-<div class="itau-cash2-container">
+<div class="julius-bar-container">
     <div class="page-header">
-        <div class="header-icon">🏦</div>
+        <div class="header-icon">🏛️</div>
         <div>
-            <h1>Itaú Cash 2.0</h1>
-            <p class="subtitle">Extração de Cash Transactions (USD/EUR/BRL)</p>
+            <h1>Julius Bär</h1>
+            <p class="subtitle">Extração de Account Transactions (USD/CHF/EUR)</p>
         </div>
     </div>
 
     <div class="info-box">
         <h3>ℹ️ Informações</h3>
         <ul>
-            <li><strong>Formato:</strong> Itaú Cash Transactions PDF</li>
-            <li><strong>Múltiplas contas:</strong> Processa todas as contas do PDF</li>
-            <li><strong>Colunas extraídas:</strong> Operation Date, Value Date, Description, Value, Account Balance</li>
-            <li><strong>Saída:</strong> Arquivo Excel (.xlsx) com uma aba por conta/moeda</li>
-            <li><strong>Detecção:</strong> Sistema por coordenadas para máxima precisão</li>
+            <li><strong>Formato:</strong> Julius Bär Account Transactions PDF</li>
+            <li><strong>Múltiplas contas:</strong> Processa todas as contas (MC + moeda)</li>
+            <li><strong>Colunas extraídas:</strong> Trade Date, Type, Quantity, Details (ISIN), Amount, Exchange Rate</li>
+            <li><strong>Saída:</strong> Arquivo Excel (.xlsx) com uma aba por conta</li>
+            <li><strong>Particularidade:</strong> Sistema detecta linhas duplas automaticamente</li>
         </ul>
     </div>
 
@@ -59,7 +59,7 @@
 
     <div id="loadingSection" class="loading-section" style="display: none;">
         <div class="spinner"></div>
-        <p>Processando PDFs do Itaú Cash Transactions...</p>
+        <p>Processando PDFs do Julius Bär...</p>
     </div>
 </div>
 
@@ -67,7 +67,7 @@
      CSS - Ordem crítica: Shared primeiro
      ======================================== -->
 <link rel="stylesheet" href="/css/pdf-upload-shared.css" />
-<link rel="stylesheet" href="/css/itau-cash2.css" />
+<link rel="stylesheet" href="/css/julius-bar.css" />
 
 <!-- ========================================
      JavaScript - Ordem crítica
@@ -78,5 +78,5 @@
 <!-- 2. Sistema de upload compartilhado -->
 <script src="/js/pdf-upload-handler.js"></script>
 
-<!-- 3. Lógica específica do Itaú Cash 2.0 -->
-<script src="/js/itau-cash2.js"></script>
+<!-- 3. Lógica específica do Julius Bär -->
+<script src="/js/julius-bar.js"></script>

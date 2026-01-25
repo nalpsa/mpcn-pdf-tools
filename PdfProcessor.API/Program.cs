@@ -17,11 +17,11 @@ builder.Services.AddScoped<IPdfCompressService, PdfCompressService>();
 builder.Services.AddScoped<IPdfMergeService, PdfMergeService>();
 builder.Services.AddScoped<IPdfEditService, PdfEditService>(); // âœ… ADICIONADO
 builder.Services.AddScoped<IItauMovimentacaoParser, ItauMovimentacaoParser>();
-builder.Services.AddScoped<IItauCashParser, ItauCashParser>();
 builder.Services.AddScoped<IBtgParser, BtgParser>();
 builder.Services.AddScoped<IUbsParser, UbsParser>();
 builder.Services.AddScoped<IMorganStanleyParser, MorganStanleyParser>();
 builder.Services.AddScoped<IItauCash2Parser, ItauCash2Parser>();
+builder.Services.AddScoped<IJuliusBarParser, JuliusBarParser>();
 
 // âœ… CORS DINÃ‚MICO: Aceita qualquer rede local + localhost
 builder.Services.AddCors(options =>
