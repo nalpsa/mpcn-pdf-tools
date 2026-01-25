@@ -212,13 +212,18 @@ public class JuliusBarParser : IJuliusBarParser
 
             _logger.LogInformation($"    📝 Processando {lines.Length} linhas");
 
+            string? previousLine = null;
+
             for (int i = 0; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
                 if (line.Length == 0) continue;
 
                 // Detectar nova conta
-                var accountMatch = Regex.Match(line, @"Account Balance (MC\S+)\s*-\s*([A-Z]{3})\s+as of");
+                // Padrões possíveis:
+                // "Account Balance MC5814508000015020078000202 - USD as of 31.12.2024"
+                // "Account Balance MC5814508000015020078000687 - GBP - as of 31.12.2024"
+                var accountMatch = Regex.Match(line, @"Account Balance (MC\S+)\s*-\s*([A-Z]{3})(?:\s*-\s*|\s+)as of");
                 if (accountMatch.Success)
                 {
                     if (state.PendingTransaction != null && state.CurrentAccount != null)
@@ -242,6 +247,7 @@ public class JuliusBarParser : IJuliusBarParser
                         _logger.LogInformation($"      🏦 NOVA CONTA: {state.CurrentAccount}");
                     }
 
+                    previousLine = null;
                     continue;
                 }
 
@@ -257,8 +263,13 @@ public class JuliusBarParser : IJuliusBarParser
                         state.PendingTransaction = null;
                     }
                     
-                    _logger.LogInformation($"      🏁 Balance as of encontrado");
+                    _logger.LogInformation($"      🏁 Balance as of encontrado para {state.CurrentAccount}");
+                    
+                    // NÃO resetar CurrentAccount - pode haver mais contas abaixo!
+                    // Apenas resetar estado da transação
                     state.IsSecondLine = false;
+                    state.CurrentAccount = null; // ← Resetar APENAS para indicar que precisa encontrar nova conta
+                    previousLine = null;
                     continue;
                 }
 
@@ -267,12 +278,20 @@ public class JuliusBarParser : IJuliusBarParser
                     line.Contains("Interim Balance") || line.Contains("Type") ||
                     line.Contains("Currency") || line.Contains("ISIN") ||
                     line.Contains("Exchange") || line.Contains("Rate") ||
-                    line.Contains("Reporting Currency") || line.Contains("Total"))
+                    line.Contains("Reporting Currency") || line.Contains("Total") ||
+                    line.Contains("Page"))
                 {
+                    previousLine = null;
                     continue;
                 }
 
-                if (state.CurrentAccount == null) continue;
+                if (state.CurrentAccount == null)
+                {
+                    // Se não tem conta ativa, guardar linha como possível Type
+                    // e continuar procurando por "Account Balance"
+                    previousLine = line;
+                    continue;
+                }
 
                 // LINHA 1: Trade Date (DD.MM.YYYY no início)
                 if (Regex.IsMatch(line, @"^\d{2}\.\d{2}\.\d{4}") && !state.IsSecondLine)
@@ -283,43 +302,80 @@ public class JuliusBarParser : IJuliusBarParser
                         allAccounts[state.CurrentAccount].Add(state.PendingTransaction);
                     }
 
-                    // Parse usando regex para extrair campos específicos
-                    // Formato: DD.MM.YYYY Type Quantity Details Amount Amount
+                    // DEBUG: Log da linha completa
+                    _logger.LogInformation($"      🔍 RAW LINE: [{line}]");
+
+                    // ESTRATÉGIA NOVA: Separar TODOS os tokens primeiro
+                    var tokens = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     
-                    var match = Regex.Match(line, @"^(\d{2}\.\d{2}\.\d{4})\s+(.+)");
-                    if (match.Success)
+                    if (tokens.Length >= 2)
                     {
-                        string tradeDate = match.Groups[1].Value;
-                        string restOfLine = match.Groups[2].Value;
-
-                        // Extrair todos os valores monetários (números com vírgulas e ponto decimal)
-                        var moneyPattern = @"-?\d{1,3}(?:,\d{3})*\.\d{2}";
-                        var moneyMatches = Regex.Matches(restOfLine, moneyPattern);
-                        var moneyValues = moneyMatches.Select(m => m.Value).ToList();
-
-                        // Remover valores monetários da string para pegar Type e Details
-                        var textOnly = Regex.Replace(restOfLine, moneyPattern, "|||").Trim();
-                        var textParts = textOnly.Split(new[] { "|||" }, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(p => p.Trim())
-                            .Where(p => p.Length > 0)
-                            .ToList();
-
-                        // Primeira parte é Type
-                        string type = textParts.FirstOrDefault() ?? "";
+                        string tradeDate = tokens[0];
                         
-                        // Quantidade: primeiro valor monetário OU primeiro número sem negativos
-                        string quantity = "";
-                        if (moneyValues.Count > 0 && !moneyValues[0].StartsWith("-"))
+                        // Separar tokens em: números monetários vs texto
+                        var moneyPattern = @"^-?\d{1,3}(?:,\d{3})*\.\d{2}$";
+                        var moneyTokens = new List<string>();
+                        var textTokens = new List<string>();
+                        
+                        for (int j = 1; j < tokens.Length; j++)
                         {
-                            quantity = moneyValues[0];
-                            moneyValues.RemoveAt(0);
+                            if (Regex.IsMatch(tokens[j], moneyPattern))
+                            {
+                                moneyTokens.Add(tokens[j]);
+                            }
+                            else
+                            {
+                                textTokens.Add(tokens[j]);
+                            }
+                        }
+                        
+                        // Type: tentar pegar da linha anterior OU do primeiro token não-monetário após a data
+                        string type = "";
+                        
+                        // Se temos previousLine E ela não tem números, usar previousLine
+                        if (!string.IsNullOrWhiteSpace(previousLine) && 
+                            !Regex.IsMatch(previousLine, @"\d{2}\.\d{2}\.\d{4}") &&
+                            !Regex.IsMatch(previousLine, @"\d+[\.,]\d+"))
+                        {
+                            type = previousLine;
+                        }
+                        // Senão, Type pode estar na própria linha (ex: "27.02.2025 Spot USD-GBP...")
+                        // Pegar primeiro token de texto (não monetário) após a data
+                        else if (textTokens.Count > 0)
+                        {
+                            // Primeiro texto pode ser o Type
+                            var potentialType = textTokens[0];
+                            
+                            // Se for um texto curto (< 50 chars), é provável que seja Type
+                            if (potentialType.Length < 50 && !potentialType.Contains("USD") && !potentialType.Contains("GBP"))
+                            {
+                                type = potentialType;
+                                textTokens.RemoveAt(0); // Remover do resto
+                            }
                         }
 
-                        // Details: texto entre Type e valores finais
-                        string details = textParts.Count > 1 ? string.Join(" ", textParts.Skip(1)) : "";
+                        // Quantity: primeiro número positivo
+                        string quantity = "";
+                        if (moneyTokens.Count > 0 && !moneyTokens[0].StartsWith("-"))
+                        {
+                            quantity = moneyTokens[0];
+                            moneyTokens.RemoveAt(0);
+                        }
 
-                        // Amount: último valor (ou penúltimo se houver 2+)
-                        string amount = moneyValues.LastOrDefault() ?? "";
+                        // Details: todos os tokens de texto (ISINs, códigos)
+                        string details = string.Join(" ", textTokens);
+
+                        // Amount: PENÚLTIMO número se houver 2+, senão o último
+                        // (porque o último geralmente é Reporting Currency)
+                        string amount = "";
+                        if (moneyTokens.Count >= 2)
+                        {
+                            amount = moneyTokens[moneyTokens.Count - 2]; // Penúltimo
+                        }
+                        else if (moneyTokens.Count == 1)
+                        {
+                            amount = moneyTokens[0]; // Único
+                        }
 
                         state.PendingTransaction = new JuliusBarTransaction
                         {
@@ -334,46 +390,72 @@ public class JuliusBarParser : IJuliusBarParser
 
                         state.IsSecondLine = true;
                         
-                        _logger.LogInformation($"      ✅ Linha 1: {tradeDate} | Type: {type} | Qty: {quantity} | Amount: {amount}");
+                        _logger.LogInformation($"      ✅ L1: Date={tradeDate} | Type=[{type}] | Qty=[{quantity}] | Details=[{details}] | Amt=[{amount}]");
                     }
+
+                    previousLine = null;
                 }
-                // LINHA 2: Value Date (DD.MM.YYYY no início E IsSecondLine)
+                // LINHA 2: Value Date
                 else if (Regex.IsMatch(line, @"^\d{2}\.\d{2}\.\d{4}") && state.IsSecondLine && state.PendingTransaction != null)
                 {
                     // Formato: DD.MM.YYYY Currency ISIN/Details
-                    var match = Regex.Match(line, @"^(\d{2}\.\d{2}\.\d{4})\s+([A-Z]{3})\s*(.*)");
-                    if (match.Success)
+                    var tokens = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    
+                    if (tokens.Length >= 2)
                     {
-                        string currency = match.Groups[2].Value;
-                        string isinAndDetails = match.Groups[3].Value.Trim();
+                        string valueDate = tokens[0];
+                        string currency = tokens[1];
+                        string isin = tokens.Length > 2 ? string.Join(" ", tokens.Skip(2)) : "";
                         
                         // Append Currency ao Type
                         state.PendingTransaction.Type += " " + currency;
                         
-                        // Append ISIN/Details
-                        if (!string.IsNullOrWhiteSpace(isinAndDetails))
+                        // Append ISIN aos Details
+                        if (!string.IsNullOrWhiteSpace(isin))
                         {
-                            state.PendingTransaction.Details += " " + isinAndDetails;
+                            state.PendingTransaction.Details = (state.PendingTransaction.Details + " " + isin).Trim();
                         }
                         
-                        _logger.LogInformation($"      ✅ Linha 2: Currency: {currency} | ISIN: {isinAndDetails}");
+                        _logger.LogInformation($"      ✅ L2: VDate={valueDate} | Curr={currency} | ISIN=[{isin}]");
                     }
 
                     state.IsSecondLine = false;
+                    previousLine = null;
                 }
-                // Continuação (não começa com data)
-                else if (state.PendingTransaction != null && !line.StartsWith("0") && !line.StartsWith("1") && !line.StartsWith("2") && !line.StartsWith("3"))
+                // Continuação ou próximo Type
+                else
                 {
-                    // Adicionar à descrição
-                    if (state.IsSecondLine)
+                    // Se está esperando linha 2 mas veio texto, adicionar aos details
+                    if (state.IsSecondLine && state.PendingTransaction != null)
                     {
-                        // Ainda na linha 2, pode ser ISIN quebrado
-                        state.PendingTransaction.Details += " " + line;
+                        // Verificar se é continuação de ISIN/Details
+                        // Palavras-chave que indicam continuação de detalhes da transação atual
+                        var detailKeywords = new[] { 
+                            "Counterpart:", "Management", "Fees:", "Quarter", 
+                            "linked", "Inflation", "Bond", "Trust", "Units",
+                            "Solutions", "Debt", "ETF", "SPDR"
+                        };
+                        
+                        bool isDetailContinuation = detailKeywords.Any(k => line.Contains(k, StringComparison.OrdinalIgnoreCase)) 
+                                                    || line.Length > 15; // Linhas longas geralmente são detalhes
+                        
+                        if (isDetailContinuation)
+                        {
+                            state.PendingTransaction.Details = (state.PendingTransaction.Details + " " + line).Trim();
+                            _logger.LogInformation($"      📝 Continuação Details: [{line}]");
+                            // Não resetar previousLine, pode ter mais linhas
+                        }
+                        else
+                        {
+                            // Linha curta sem keywords = próximo Type
+                            previousLine = line;
+                            _logger.LogInformation($"      🏷️ Possível próximo Type: [{line}]");
+                        }
                     }
                     else
                     {
-                        // Linha extra de detalhes
-                        state.PendingTransaction.Details += " " + line;
+                        // Guardar como possível Type da próxima transação
+                        previousLine = line;
                     }
                 }
             }
