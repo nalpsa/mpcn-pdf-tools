@@ -3,20 +3,22 @@
    ================================================================
    Este arquivo contém APENAS estilos específicos da página BTG
    Estilos de upload, botões, loading etc estão em pdf-upload-shared.css
+   
+   COR TEMA: Dourado BTG #dd9504 / #ffaa00
    ================================================================ */
 
 /* ============================================================
    LAYOUT DA PÁGINA
    ============================================================ */
 
-.page-container {
+.btg-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
 
 /* ============================================================
-   CABEÇALHO DA PÁGINA
+   CABEÇALHO (ESTILO PRÓPRIO DO BTG - DOURADO)
    ============================================================ */
 
 .page-header {
@@ -43,50 +45,177 @@
 }
 
 /* ============================================================
-   CARD DE CONTEÚDO
-   ============================================================ */
-
-.content-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  margin-bottom: 2rem;
-}
-
-/* ============================================================
-   CAIXAS INFORMATIVAS
+   INFO BOX (DOURADO BTG)
    ============================================================ */
 
 .info-box {
+  background: #fffbf0;
+  border-left: 4px solid #dd9504;
   padding: 1.5rem;
-  border-radius: 8px;
   margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+.info-box h3 {
+  color: #dd9504;
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.info-box ul {
+  margin: 1rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.info-box li {
+  margin-bottom: 0.5rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   LAYOUT BUTTON & MODAL - BTG PACTUAL
+   ============================================================ */
+
+.layout-button-section {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.btn-view-layout {
+  background: linear-gradient(135deg, #dd9504 0%, #ffaa00 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(221, 149, 4, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-view-layout:hover {
+  background: linear-gradient(135deg, #c78504 0%, #e69900 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(221, 149, 4, 0.3);
+}
+
+.btn-view-layout:active {
+  transform: translateY(0);
+}
+
+.layout-icon {
+  font-size: 1.2rem;
+}
+
+/* Modal Overlay */
+.modal-layout {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-layout.show {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  justify-content: center;
 }
 
-.info-box.info {
-  background: #e6f3ff;
-  border-left: 4px solid #0066cc;
+/* Modal Content */
+.modal-content-layout {
+  background: white;
+  border-radius: 12px;
+  max-width: 720px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
 }
 
-.info-box.warning {
-  background: #fff8e6;
-  border-left: 4px solid #ffaa00;
+/* Modal Header */
+.modal-header-layout {
+  background: linear-gradient(135deg, #dd9504 0%, #ffaa00 100%);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.info-box code {
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  font-family: "Courier New", monospace;
-  font-size: 0.9rem;
+.modal-header-layout h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-.info-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+.btn-close-modal {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-modal:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* Modal Body */
+.modal-body-layout {
+  padding: 1.5rem;
+  text-align: center;
+  background: #f7fafc;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
+}
+
+.layout-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ============================================================
@@ -98,37 +227,145 @@
 }
 
 /* ============================================================
-   GRID DE FEATURES
+   FILE LIST (ESPECÍFICO DO BTG)
    ============================================================ */
 
-.feature-boxes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.feature-box {
+.file-list {
   background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.file-list h3 {
+  color: #dd9504;
+  margin-top: 0;
+  font-size: 1.125rem;
+}
+
+#fileListContent ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+#fileListContent li {
+  padding: 0.75rem;
+  background: #fffbf0;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  border-left: 3px solid #dd9504;
+  color: #334155;
+}
+
+/* ============================================================
+   PROCESS BUTTON (ESPECÍFICO DO BTG - DOURADO)
+   ============================================================ */
+
+.process-btn {
+  background: #dd9504;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.process-btn:hover {
+  background: #c78504;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(221, 149, 4, 0.3);
+}
+
+.process-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================================
+   RESULT E ERROR SECTIONS (ESPECÍFICO DO BTG)
+   ============================================================ */
+
+.result-section {
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 8px;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin-top: 2rem;
 }
 
-.feature-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+.result-success h3 {
+  color: #16a34a;
+  margin-top: 0;
+  font-size: 1.5rem;
 }
 
-.feature-box h4 {
-  color: #2d3748;
-  margin: 0 0 0.5rem 0;
+.result-success p {
+  color: #15803d;
+  margin: 1rem 0;
 }
 
-.feature-box p {
-  color: #718096;
-  margin: 0;
-  font-size: 0.95rem;
+.download-btn {
+  display: inline-block;
+  background: #16a34a;
+  color: white;
+  padding: 1rem 2rem;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.download-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.error-section {
+  background: #fef2f2;
+  border: 2px solid #fca5a5;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.error-message h3 {
+  color: #dc2626;
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.error-message p {
+  color: #991b1b;
+  margin: 1rem 0 0 0;
+}
+
+/* ============================================================
+   LOADING SECTION (ESPECÍFICO DO BTG)
+   ============================================================ */
+
+.loading-section {
+  text-align: center;
+  padding: 3rem;
+}
+
+.loading-section p {
+  color: #475569;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+/* Customizar spinner para dourado BTG */
+.loading-section .spinner {
+  border-top-color: #dd9504;
 }
 
 /* ============================================================
@@ -136,28 +373,65 @@
    ============================================================ */
 
 @media (max-width: 768px) {
-  .page-container {
+  .btg-container {
     padding: 1rem;
   }
 
-  .page-header {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .header-icon {
-    font-size: 2.5rem;
-  }
-
-  .page-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .content-card {
+  .header {
     padding: 1.5rem;
   }
 
-  .feature-boxes {
-    grid-template-columns: 1fr;
+  .header h1 {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .info-box {
+    padding: 1rem;
+  }
+
+  .file-list {
+    padding: 1rem;
+  }
+
+  .result-section,
+  .error-section {
+    padding: 1.5rem;
+  }
+
+  .process-btn {
+    font-size: 1rem;
+  }
+
+  /* Responsividade do Modal */
+  .modal-content-layout {
+    width: 95%;
+    max-width: 95%;
+  }
+
+  .modal-header-layout {
+    padding: 1rem;
+  }
+
+  .modal-header-layout h3 {
+    font-size: 1rem;
+  }
+
+  .btn-close-modal {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+  }
+
+  .modal-body-layout {
+    padding: 1rem;
+  }
+
+  .btn-view-layout {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
   }
 }

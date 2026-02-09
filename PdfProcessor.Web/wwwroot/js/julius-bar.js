@@ -164,6 +164,65 @@ async function processFiles() {
 }
 
 // ============================================================
+// MODAL LAYOUT CONTROL
+// ============================================================
+
+function initLayoutModal() {
+  console.log("🔧 Inicializando modal de layout...");
+  
+  const btnViewLayout = document.getElementById("btnViewLayout");
+  const btnCloseModal = document.getElementById("btnCloseModal");
+  const modal = document.getElementById("layoutModal");
+
+  if (!btnViewLayout) {
+    console.error("❌ Botão btnViewLayout não encontrado!");
+    return;
+  }
+
+  if (!btnCloseModal) {
+    console.error("❌ Botão btnCloseModal não encontrado!");
+    return;
+  }
+
+  if (!modal) {
+    console.error("❌ Modal layoutModal não encontrado!");
+    return;
+  }
+
+  console.log("✅ Elementos do modal encontrados");
+
+  // Abrir modal
+  btnViewLayout.addEventListener("click", function () {
+    console.log("🖼️ Abrindo modal de layout");
+    modal.classList.add("show");
+  });
+
+  // Fechar modal - botão X
+  btnCloseModal.addEventListener("click", function () {
+    console.log("❌ Fechando modal (botão X)");
+    modal.classList.remove("show");
+  });
+
+  // Fechar modal - clique fora
+  modal.addEventListener("click", function (event) {
+    if (event.target === modal) {
+      console.log("❌ Fechando modal (clique fora)");
+      modal.classList.remove("show");
+    }
+  });
+
+  // Fechar modal - tecla ESC
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && modal.classList.contains("show")) {
+      console.log("❌ Fechando modal (ESC)");
+      modal.classList.remove("show");
+    }
+  });
+
+  console.log("✅ Modal de layout inicializado com sucesso!");
+}
+
+// ============================================================
 // INICIALIZAÇÃO
 // ============================================================
 
@@ -187,6 +246,8 @@ window.initializePdfUpload = function () {
     console.log('✅ Botão processar configurado');
   }
 };
+
+ setTimeout(initLayoutModal, 100);
 
 // Inicialização automática
 if (document.readyState === 'loading') {

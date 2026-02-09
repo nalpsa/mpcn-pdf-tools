@@ -22,101 +22,67 @@ function getApiUrl() {
 }
 
 // ============================================================
-// UI FUNCTIONS
+// UI FUNCTIONS ESPECÍFICAS DO BTG
 // ============================================================
 
-function showMessage(message, type = "info") {
-  const statusMessage = document.getElementById("statusMessage");
-  if (!statusMessage) return;
-
-  statusMessage.textContent = message;
-  statusMessage.className = `alert alert-${type}`;
-  statusMessage.style.display = "block";
-
-  if (type === "success" || type === "error") {
-    setTimeout(() => {
-      statusMessage.style.display = "none";
-    }, 5000);
-  }
+function showLoading() {
+  document.getElementById("loadingSection").style.display = "block";
+  document.getElementById("resultSection").style.display = "none";
+  document.getElementById("errorSection").style.display = "none";
+  document.getElementById("fileList").style.display = "none";
 }
 
-function showLoading(show, text = "Processando...") {
-  const loading = document.getElementById("loadingIndicator");
-  const loadingText = document.getElementById("loadingText");
+function hideLoading() {
+  document.getElementById("loadingSection").style.display = "none";
+}
 
-  if (loading) {
-    loading.style.display = show ? "flex" : "none";
-  }
+function showSuccess(filename, url) {
+  document.getElementById("resultMessage").textContent =
+    `Arquivo gerado: ${filename}`;
+  document.getElementById("downloadLink").href = url;
+  document.getElementById("downloadLink").download = filename;
+  document.getElementById("resultSection").style.display = "block";
+}
 
-  if (loadingText && text) {
-    loadingText.textContent = text;
-  }
+function showError(message) {
+  document.getElementById("errorMessage").textContent = message;
+  document.getElementById("errorSection").style.display = "block";
 }
 
 function updateUI() {
-  const filesSelected = document.getElementById("filesSelected");
-  const filesList = document.getElementById("filesList");
-  const filesSummary = document.getElementById("filesSummary");
-  const actionButtons = document.getElementById("actionButtons");
-  const processBtn = document.getElementById("processBtn");
-
-  if (!filesSelected || !filesList || !actionButtons) return;
+  const fileList = document.getElementById("fileList");
+  const fileListContent = document.getElementById("fileListContent");
 
   if (selectedFiles.length === 0) {
-    filesSelected.style.display = "none";
-    actionButtons.style.display = "none";
+    fileList.style.display = "none";
     return;
   }
 
-  // Mostrar lista de arquivos
-  filesSelected.style.display = "block";
-  actionButtons.style.display = "flex";
-
   // Renderizar lista
-  filesList.innerHTML = selectedFiles
-    .map(
-      (file, index) => `
-    <div class="file-item">
-      <span class="file-icon">📄</span>
-      <span class="file-name">${file.name}</span>
-      <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
-      <button class="btn-remove" onclick="removeFile(${index})">🗑️</button>
-    </div>
-  `,
-    )
-    .join("");
+  let html = "<ul>";
+  selectedFiles.forEach((file) => {
+    html += `<li>📄 ${file.name} (${(file.size / 1024).toFixed(2)} KB)</li>`;
+  });
+  html += "</ul>";
 
-  // Atualizar resumo
-  if (filesSummary) {
-    const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
-    filesSummary.innerHTML = `
-      <strong>Total:</strong> ${selectedFiles.length} arquivo(s) - 
-      ${(totalSize / 1024).toFixed(2)} KB
-    `;
-  }
+  fileListContent.innerHTML = html;
+  fileList.style.display = "block";
 
-  // Habilitar botão de processar
-  if (processBtn) {
-    processBtn.disabled = false;
-    processBtn.textContent = `🦁 Processar ${selectedFiles.length} arquivo(s)`;
-  }
+  console.log(`📋 Mostrando ${selectedFiles.length} arquivo(s)`);
 }
 
 // ============================================================
 // FILE MANAGEMENT
 // ============================================================
 
-function removeFile(index) {
-  console.log("🗑️ Removendo arquivo:", selectedFiles[index].name);
-  selectedFiles.splice(index, 1);
-  updateUI();
-}
-
 function clearFiles() {
   console.log("🗑️ Limpando todos os arquivos");
   selectedFiles = [];
   updateUI();
-  showMessage("", "info"); // Limpar mensagens
+
+  // Esconder sections
+  document.getElementById("resultSection").style.display = "none";
+  document.getElementById("errorSection").style.display = "none";
 }
 
 // ============================================================
@@ -124,7 +90,7 @@ function clearFiles() {
 // ============================================================
 
 function onFilesSelected(validFiles, errors) {
-  console.log("📁 Callback recebido:", {
+  console.log("📎 Callback recebido:", {
     validFiles: validFiles.length,
     errors: errors.length,
   });
@@ -134,9 +100,7 @@ function onFilesSelected(validFiles, errors) {
 
   // Mostrar erros se houver
   if (errors.length > 0) {
-    showMessage(errors[0], "error");
-  } else if (validFiles.length > 0) {
-    showMessage(`${validFiles.length} arquivo(s) selecionado(s)`, "success");
+    showError(errors[0]);
   }
 
   // Atualizar interface
@@ -149,7 +113,7 @@ function onFilesSelected(validFiles, errors) {
 
 async function processFiles() {
   if (selectedFiles.length === 0) {
-    showMessage("Nenhum arquivo selecionado", "error");
+    showError("Selecione pelo menos um arquivo PDF");
     return;
   }
 
@@ -159,17 +123,14 @@ async function processFiles() {
     "arquivo(s)",
   );
 
-  showLoading(
-    true,
-    `Processando ${selectedFiles.length} extrato(s) do BTG Pactual...`,
-  );
-  showMessage("", "info"); // Limpar mensagens anteriores
+  showLoading();
 
   try {
     // Criar FormData
     const formData = new FormData();
-    selectedFiles.forEach((file) => {
+    selectedFiles.forEach((file, index) => {
       formData.append("files", file);
+      console.log(`📎 Arquivo ${index + 1} adicionado: ${file.name}`);
     });
 
     console.log("📤 Enviando para API:", getApiUrl());
@@ -190,26 +151,80 @@ async function processFiles() {
     // Download do arquivo Excel
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `BTG_Pactual_Transactions_${new Date().toISOString().split("T")[0]}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
 
-    console.log("✅ Download iniciado com sucesso");
+    // Tentar extrair filename do header
+    const filename =
+      response.headers.get("content-disposition")?.split("filename=")[1] ||
+      `btg_pactual_${new Date().toISOString().split("T")[0]}.xlsx`;
 
-    showMessage("✅ Excel gerado e baixado com sucesso!", "success");
+    console.log("✅ Sucesso! Arquivo:", filename);
 
-    // Limpar arquivos após sucesso
-    setTimeout(() => clearFiles(), 2000);
+    showSuccess(filename, url);
   } catch (error) {
     console.error("❌ Erro no processamento:", error);
-    showMessage(`Erro: ${error.message}`, "error");
+    showError(error.message);
   } finally {
-    showLoading(false);
+    hideLoading();
   }
+}
+
+// ============================================================
+// MODAL LAYOUT CONTROL
+// ============================================================
+
+function initLayoutModal() {
+  console.log("🔧 Inicializando modal de layout...");
+  
+  const btnViewLayout = document.getElementById("btnViewLayout");
+  const btnCloseModal = document.getElementById("btnCloseModal");
+  const modal = document.getElementById("layoutModal");
+
+  if (!btnViewLayout) {
+    console.error("❌ Botão btnViewLayout não encontrado!");
+    return;
+  }
+
+  if (!btnCloseModal) {
+    console.error("❌ Botão btnCloseModal não encontrado!");
+    return;
+  }
+
+  if (!modal) {
+    console.error("❌ Modal layoutModal não encontrado!");
+    return;
+  }
+
+  console.log("✅ Elementos do modal encontrados");
+
+  // Abrir modal
+  btnViewLayout.addEventListener("click", function () {
+    console.log("🖼️ Abrindo modal de layout");
+    modal.classList.add("show");
+  });
+
+  // Fechar modal - botão X
+  btnCloseModal.addEventListener("click", function () {
+    console.log("❌ Fechando modal (botão X)");
+    modal.classList.remove("show");
+  });
+
+  // Fechar modal - clique fora
+  modal.addEventListener("click", function (event) {
+    if (event.target === modal) {
+      console.log("❌ Fechando modal (clique fora)");
+      modal.classList.remove("show");
+    }
+  });
+
+  // Fechar modal - tecla ESC
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && modal.classList.contains("show")) {
+      console.log("❌ Fechando modal (ESC)");
+      modal.classList.remove("show");
+    }
+  });
+
+  console.log("✅ Modal de layout inicializado com sucesso!");
 }
 
 // ============================================================
@@ -228,6 +243,16 @@ window.initializePdfUpload = function () {
     allowMultiple: true,
     debug: true,
   });
+
+  // Adicionar listener ao botão processar
+  const processBtn = document.getElementById("processBtn");
+  if (processBtn) {
+    processBtn.addEventListener("click", processFiles);
+    console.log("✅ Botão processar configurado");
+  }
+  
+  // ⭐ INICIALIZAR MODAL TAMBÉM
+  setTimeout(initLayoutModal, 100);
 };
 
 // Inicialização automática
@@ -235,7 +260,7 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", window.initializePdfUpload);
 } else {
   // DOM já carregado (navegação SPA do Blazor)
-  setTimeout(window.initializePdfUpload, 50);
+  setTimeout(window.initializePdfUpload, 100);
 }
 
 // ============================================================
@@ -244,4 +269,5 @@ if (document.readyState === "loading") {
 
 window.processFiles = processFiles;
 window.clearFiles = clearFiles;
-window.removeFile = removeFile;
+
+console.log("✅ Script btg.js carregado completamente");

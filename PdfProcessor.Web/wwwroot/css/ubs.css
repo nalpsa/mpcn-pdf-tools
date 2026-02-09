@@ -261,3 +261,182 @@
     font-size: 1rem;
   }
 }
+
+
+/* ============================================================
+   LAYOUT BUTTON & MODAL - UBS SWITZERLAND
+   ============================================================
+   Adicione este CSS ao final do arquivo ubs.css
+   ============================================================ */
+
+.layout-button-section {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.btn-view-layout {
+  background: linear-gradient(135deg, #e60000 0%, #c70000 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(230, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-view-layout:hover {
+  background: linear-gradient(135deg, #c70000 0%, #a80000 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(230, 0, 0, 0.3);
+}
+
+.btn-view-layout:active {
+  transform: translateY(0);
+}
+
+.layout-icon {
+  font-size: 1.2rem;
+}
+
+/* Modal Overlay */
+.modal-layout {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-layout.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal Content */
+.modal-content-layout {
+  background: white;
+  border-radius: 12px;
+  max-width: 720px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+/* Modal Header */
+.modal-header-layout {
+  background: linear-gradient(135deg, #e60000 0%, #c70000 100%);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header-layout h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.btn-close-modal {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-modal:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* Modal Body */
+.modal-body-layout {
+  padding: 1.5rem;
+  text-align: center;
+  background: #f7fafc;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
+}
+
+.layout-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsividade do Modal */
+@media (max-width: 768px) {
+  .modal-content-layout {
+    width: 95%;
+    max-width: 95%;
+  }
+
+  .modal-header-layout {
+    padding: 1rem;
+  }
+
+  .modal-header-layout h3 {
+    font-size: 1rem;
+  }
+
+  .btn-close-modal {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+  }
+
+  .modal-body-layout {
+    padding: 1rem;
+  }
+
+  .btn-view-layout {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}

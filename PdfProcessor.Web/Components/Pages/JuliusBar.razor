@@ -17,10 +17,32 @@
         <ul>
             <li><strong>Formato:</strong> Julius Bär Account Transactions PDF</li>
             <li><strong>Múltiplas contas:</strong> Processa todas as contas (MC + moeda)</li>
-            <li><strong>Colunas extraídas:</strong> Trade Date, Type, Quantity, Details (ISIN), Amount, Exchange Rate</li>
+            <li><strong>Colunas extraídas:</strong> Trade Date, Type, Quantity, Details (ISIN), Amount, Exchange Rate
+            </li>
             <li><strong>Saída:</strong> Arquivo Excel (.xlsx) com uma aba por conta</li>
             <li><strong>Particularidade:</strong> Sistema detecta linhas duplas automaticamente</li>
         </ul>
+    </div>
+
+    <!-- Botão Vide Layout -->
+    <div class="layout-button-section">
+        <button id="btnViewLayout" class="btn-view-layout">
+            <span class="layout-icon">🖼️</span>
+            Veja o Layout do PDF
+        </button>
+    </div>
+
+    <!-- Modal do Layout -->
+    <div id="layoutModal" class="modal-layout">
+        <div class="modal-content-layout">
+            <div class="modal-header-layout">
+                <h3>📄 Layout do PDF - Julius Bär</h3>
+                <button id="btnCloseModal" class="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body-layout">
+                <img src="/img/layout_jb.png" alt="Layout Julius Bär" class="layout-image" />
+            </div>
+        </div>
     </div>
 
     <div class="upload-section">
