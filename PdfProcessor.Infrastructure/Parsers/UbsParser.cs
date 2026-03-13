@@ -51,47 +51,84 @@ public class UbsParser : IUbsParser
 
           var text = PdfTextExtractor.GetTextFromPage(pdfReader, pageNum);
 
-          // ✅ DETECTAR IBAN - aceita com ou sem espaços
-          string currentIban = "";
+          // ✅ DETECTAR CONTA - suporta DOIS formatos:
+          // Formato 1 (antigo): "UBS current account" + IBAN CH...
+          // Formato 2 (novo): "International RMA" + "Account number: XF 00759 ML"
+          string currentAccount = "";
 
           var lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
           for (int i = 0; i < lines.Length; i++)
           {
+            // ✅ FORMATO ANTIGO: "UBS current account"
             if (lines[i].Contains("UBS current account"))
             {
-              // Procurar IBAN nas próximas 5 linhas
               for (int j = i + 1; j < Math.Min(i + 6, lines.Length); j++)
               {
-                // ✅ REGEX FLEXÍVEL: aceita espaços opcionais
-                // Padrão: IBAN CH + 2 dígitos + resto (com ou sem espaços)
                 var ibanMatch = Regex.Match(lines[j], @"IBAN\s+(CH\d{2}[\s\d]{4,}[\dA-Z\s]+)");
 
                 if (ibanMatch.Success)
                 {
-                  currentIban = ibanMatch.Groups[1].Value.Trim();
-                  Console.WriteLine($"🏦 IBAN detectado: {currentIban}");
+                  currentAccount = ibanMatch.Groups[1].Value.Trim();
+                  Console.WriteLine($"🏦 IBAN detectado (formato antigo): {currentAccount}");
                   break;
                 }
 
-                // Fallback: pegar linha inteira se começa com CH
                 if (lines[j].Trim().StartsWith("IBAN CH"))
                 {
-                  currentIban = lines[j].Replace("IBAN", "").Trim();
-                  Console.WriteLine($"🏦 IBAN detectado (fallback): {currentIban}");
+                  currentAccount = lines[j].Replace("IBAN", "").Trim();
+                  Console.WriteLine($"🏦 IBAN detectado (fallback antigo): {currentAccount}");
                   break;
                 }
               }
-              if (!string.IsNullOrWhiteSpace(currentIban)) break;
+              if (!string.IsNullOrWhiteSpace(currentAccount)) break;
+            }
+
+            // ✅ FORMATO NOVO: "International RMA" ou "Account name:"
+            if (lines[i].Contains("International RMA") || lines[i].Contains("Account name:"))
+            {
+              // Procurar "Account number:" nas próximas 10 linhas
+              for (int j = i; j < Math.Min(i + 10, lines.Length); j++)
+              {
+                if (lines[j].Contains("Account number:"))
+                {
+                  // Extrair número da conta (formato: XF 00759 ML)
+                  var accountMatch = Regex.Match(lines[j], @"Account number:\s*([A-Z]{2}\s*\d{5}\s*[A-Z]{2})");
+
+                  if (accountMatch.Success)
+                  {
+                    currentAccount = accountMatch.Groups[1].Value.Trim();
+                    Console.WriteLine($"🏦 Conta detectada (formato novo): {currentAccount}");
+                    break;
+                  }
+
+                  // Fallback: pegar o que vem depois de ":"
+                  var parts = lines[j].Split(':');
+                  if (parts.Length > 1)
+                  {
+                    currentAccount = parts[1].Trim();
+                    Console.WriteLine($"🏦 Conta detectada (fallback novo): {currentAccount}");
+                    break;
+                  }
+                }
+              }
+              if (!string.IsNullOrWhiteSpace(currentAccount)) break;
             }
           }
 
-          if (!text.Contains("Account Statement"))
+          // ✅ VERIFICAR SE É PÁGINA DE TRANSAÇÕES
+          // Formato antigo: "Account Statement"
+          // Formato novo: "Account activity this month"
+          bool hasTransactionTable = text.Contains("Account Statement") ||
+                                     text.Contains("Account activity this month");
+
+          if (!hasTransactionTable)
           {
-            Console.WriteLine("⏭️ Página sem Account Statement");
+            Console.WriteLine("⏭️ Página sem tabela de transações");
             continue;
           }
 
-          var pageTransactions = ExtractTransactionsWithPosition(pdfReader, pageNum, currentIban);
+          var pageTransactions = ExtractTransactionsWithPosition(pdfReader, pageNum, currentAccount);
           transactions.AddRange(pageTransactions);
 
           Console.WriteLine($"✅ {pageTransactions.Count} transação(ões) extraída(s)");
